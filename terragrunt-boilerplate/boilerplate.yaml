@@ -1,6 +1,21 @@
 variables:
   - name: units
-    description: List of units to be deployed. (none, unit1, unit2, unit3).
+    description: |
+      acm
+      api-gateway
+      aws-lbc
+      cloudfront
+      ebs-csi-driver
+      eks
+      iam-role
+      kms
+      lambda
+      rds-lambda
+      route53-zones
+      route53
+      s3
+      secrets-manager
+      vpc
+      webacl
     type: list
-    default: 
-      - none
+    default: []
