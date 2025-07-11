@@ -1,1 +1,1 @@
-# boilerplate-separate
+# boilerplate terragrunt-stack template for single account environment
