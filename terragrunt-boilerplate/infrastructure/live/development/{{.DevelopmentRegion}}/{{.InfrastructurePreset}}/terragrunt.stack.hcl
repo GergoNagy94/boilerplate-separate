@@ -15,7 +15,7 @@ locals {
     Maintaner   = "Terragrunt"
   }
 }
-{ { if or(eq.InfrastructurePreset "foundation") (eq.InfrastructurePreset "eks-auto") (eq.InfrastructurePreset "eks-managed") (eq.InfrastructurePreset "serverless") } }
+{{ if or (eq .InfrastructurePreset "foundation") (eq .InfrastructurePreset "eks-auto") (eq .InfrastructurePreset "eks-managed") (eq .InfrastructurePreset "serverless") }}
 unit "vpc" {
   source = "../../../../units/vpc"
   path   = "vpc"
@@ -39,10 +39,10 @@ unit "vpc" {
     create_flow_log_cloudwatch_iam_role  = false
     create_flow_log_cloudwatch_log_group = false
 
-    { { if or(eq.InfrastructurePreset "eks-auto") (eq.InfrastructurePreset "eks-managed") } }
+    {{ if or (eq .InfrastructurePreset "eks-auto") (eq .InfrastructurePreset "eks-managed") }}
     cluster_name = "{local.project}-{local.env}-cluster"
-    { { end } }
-    { { if eq.InfrastructurePreset "serverless" } }
+    {{ end }}
+    {{ if eq .InfrastructurePreset "serverless" }}
     database_subnets                   = ["10.0.201.0/24", "10.0.202.0/24", "10.0.203.0/24"]
     create_database_subnet_group       = true
     create_database_subnet_route_table = true
@@ -59,7 +59,7 @@ unit "vpc" {
     database_subnet_tags = {
       Type = "Database"
     }
-    { { end } }
+    {{ end }}
     tags = {
       Name        = "{local.project}-{local.env}-vpc"
       Environment = "development"
@@ -68,8 +68,8 @@ unit "vpc" {
     }
   }
 }
-{ { end } }
-{ { if eq.InfrastructurePreset "web" } }
+{{ end }}
+{{ if eq .InfrastructurePreset "web" }}
 unit "route53_zones" {
   source = "../../../../units/route53-zones"
   path   = "route53-zones"
@@ -277,8 +277,8 @@ unit "route53_records" {
     }
   }
 }
-{ { end } }
-{ { if eq.InfrastructurePreset "eks-auto" } }
+{{ end }}
+{{ if eq .InfrastructurePreset "eks-auto" }}
 unit "kms" {
   source = "../../../../units/kms"
   path   = "kms"
@@ -438,8 +438,8 @@ unit "additional_iam_roles" {
     }
   }
 }
-{ { end } }
-{ { if eq.InfrastructurePreset "serverless" } }
+{{ end }}
+{{ if eq .InfrastructurePreset "serverless" }}
 unit "secrets_manager" {
   source = "../../../../units/secrets-manager"
   path   = "secrets-manager"
@@ -634,4 +634,4 @@ unit "api_gateway" {
     }
   }
 }
-{ { end } }
+{{ end }}
