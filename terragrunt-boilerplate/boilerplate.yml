@@ -1,6 +1,6 @@
 variables:
   - name: ProjectName
-    description: "Name of your project (lowercase, alphanumeric with hyphens)"
+    description: "(lowercase, alphanumeric with hyphens)"
     order: 1
     type: string
     default: "my-project"
@@ -9,7 +9,7 @@ variables:
       - length-3-20
 
   - name: ProjectVersion
-    description: "Project version (semantic versioning format: x.y.z)"
+    description: "(semantic versioning format: x.y.z)"
     order: 2
     type: string
     default: "1.0.0"
@@ -18,7 +18,7 @@ variables:
       - semver
 
   - name: OrganizationId
-    description: "AWS Organization ID (format: o-xxxxxxxxxx)"
+    description: "(format: o-xxxxxxxxxx)"
     order: 3
     type: string
     validations:
@@ -26,7 +26,7 @@ variables:
       - length-12-34
 
   - name: OrganizationRootId
-    description: "AWS Organization Root ID (format: r-xxxx)"
+    description: "(format: r-xxxx)"
     order: 4
     type: string
     validations:
@@ -34,7 +34,7 @@ variables:
       - length-6-36
 
   - name: DevelopmentAccountId
-    description: "Development Account ID (exactly 12 digits)"
+    description: "(exactly 12 digits)"
     order: 5
     type: string
     validations:
@@ -43,7 +43,7 @@ variables:
       - digit
 
   - name: EmailDomain
-    description: "Domain for AWS account emails (valid domain format)"
+    description: "(valid domain format)"
     order: 9
     type: string
     validations:
@@ -51,7 +51,6 @@ variables:
       - email
 
   - name: DevelopmentRegion
-    description: "Development AWS Region"
     order: 10
     type: enum
     default: "eu-west-1"
@@ -82,7 +81,6 @@ variables:
       - required
 
   - name: StateRegion
-    description: "Region for Terraform state bucket"
     order: 14
     type: enum
     default: "eu-central-1"
@@ -113,7 +111,6 @@ variables:
       - required
 
   - name: OpentofuVersion
-    description: "OpenTofu version"
     order: 16
     type: string
     default: "1.10.2"
@@ -122,7 +119,6 @@ variables:
       - semver
 
   - name: TerragruntVersion
-    description: "Terragrunt version"
     order: 17
     type: string
     default: "0.82.3"
