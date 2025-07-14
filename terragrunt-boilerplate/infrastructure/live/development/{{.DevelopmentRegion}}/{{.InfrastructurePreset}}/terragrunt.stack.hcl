@@ -17,7 +17,7 @@ locals {
 }
 {{ if or (eq .InfrastructurePreset "vpc") (eq .InfrastructurePreset "eks-auto") (eq .InfrastructurePreset "eks-managed") (eq .InfrastructurePreset "serverless") }}
 unit "vpc" {
-  source = "../../../../units/vpc"
+  source = "../../../../../units/vpc"
   path   = "vpc"
 
   values = {
@@ -71,7 +71,7 @@ unit "vpc" {
 {{ end }}
 {{ if eq .InfrastructurePreset "web" }}
 unit "route53_zones" {
-  source = "../../../../units/route53-zones"
+  source = "../../../../../units/route53-zones"
   path   = "route53-zones"
 
   values = {
@@ -91,7 +91,7 @@ unit "route53_zones" {
 }
 
 unit "acm" {
-  source = "../../../../units/acm"
+  source = "../../../../../units/acm"
   path   = "acm"
 
   values = {
@@ -107,7 +107,7 @@ unit "acm" {
 }
 
 unit "webacl" {
-  source = "../../../../units/webacl"
+  source = "../../../../../units/webacl"
   path   = "webacl"
 
   values = {
@@ -152,7 +152,7 @@ unit "webacl" {
 }
 
 unit "s3" {
-  source = "../../../../units/s3"
+  source = "../../../../../units/s3"
   path   = "s3"
 
   values = {
@@ -209,7 +209,7 @@ unit "s3" {
 }
 
 unit "cloudfront" {
-  source = "../../../../units/cloudfront"
+  source = "../../../../../units/cloudfront"
   path   = "cloudfront"
 
   values = {
@@ -251,7 +251,7 @@ unit "cloudfront" {
 }
 
 unit "route53_records" {
-  source = "../../../../units/route53"
+  source = "../../../../../units/route53"
   path   = "route53-records"
 
   values = {
@@ -280,7 +280,7 @@ unit "route53_records" {
 {{ end }}
 {{ if eq .InfrastructurePreset "eks-auto" }}
 unit "kms" {
-  source = "../../../../units/kms"
+  source = "../../../../../units/kms"
   path   = "kms"
 
   values = {
@@ -303,7 +303,7 @@ unit "kms" {
 }
 
 unit "eks" {
-  source = "../../../../units/eks"
+  source = "../../../../../units/eks"
   path   = "eks"
 
   values = {
@@ -360,7 +360,7 @@ unit "eks" {
 }
 
 unit "ebs_csi_driver" {
-  source = "../../../../units/ebs-csi-driver"
+  source = "../../../../../units/ebs-csi-driver"
   path   = "ebs-csi-driver"
 
   values = {
@@ -381,7 +381,7 @@ unit "ebs_csi_driver" {
 }
 
 unit "aws_load_balancer_controller" {
-  source = "../../../../units/aws-lbc"
+  source = "../../../../../units/aws-lbc"
   path   = "aws-load-balancer-controller"
 
   values = {
@@ -417,7 +417,7 @@ unit "aws_load_balancer_controller" {
 }
 
 unit "additional_iam_roles" {
-  source = "../../../../units/iam-role"
+  source = "../../../../../units/iam-role"
   path   = "additional-iam-roles"
 
   values = {
@@ -441,7 +441,7 @@ unit "additional_iam_roles" {
 {{ end }}
 {{ if eq .InfrastructurePreset "serverless" }}
 unit "secrets_manager" {
-  source = "../../../../units/secrets-manager"
+  source = "../../../../../units/secrets-manager"
   path   = "secrets-manager"
 
   values = {
@@ -476,7 +476,7 @@ unit "secrets_manager" {
 }
 
 unit "rds" {
-  source = "../../../../units/rds-lambda"
+  source = "../../../../../units/rds-lambda"
   path   = "rds"
 
   values = {
@@ -539,7 +539,7 @@ unit "rds" {
 }
 
 unit "lambda" {
-  source = "../../../../units/lambda"
+  source = "../../../../../units/lambda"
   path   = "lambda"
 
   values = {
@@ -585,7 +585,7 @@ unit "lambda" {
 }
 
 unit "api_gateway" {
-  source = "../../../../units/api-gateway"
+  source = "../../../../../units/api-gateway"
   path   = "api-gateway"
 
   values = {
