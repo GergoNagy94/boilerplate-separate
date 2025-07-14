@@ -1,63 +1,151 @@
 {{- if has "vpc" .units }}
-# example
+# vpc example
+{{- end }}
+
+{{- if has "vpc-peering" .units }}
+# vpc peering example
 {{- end }}
 
 {{- if has "kms" .units }}
-# example
+# kms example
+{{- end }}
+
+{{- if has "ec2" .units }}
+# ec2 example
 {{- end }}
 
 {{- if has "route53-zones" .units }}
-# example
+# route53 zones example
+{{- end }}
+
+{{- if has "route53-records" .units }}
+# route53 records example
 {{- end }}
 
 {{- if has "eks" .units }}
-# example
+# eks example
+{{- end }}
+
+{{- if has "eks-addons" .units }}
+# eks addons example
 {{- end }}
 
 {{- if has "lambda" .units }}
-# example
+# lambda example
+{{- end }}
+
+{{- if has "lambda-layer" .units }}
+# lambda layer example
 {{- end }}
 
 {{- if has "iam-role" .units }}
-# example
+# iam role example
+{{- end }}
+
+{{- if has "iam-policy" .units }}
+# iam policy example
+{{- end }}
+
+{{- if has "iam-user" .units }}
+# iam user example
 {{- end }}
 
 {{- if has "s3" .units }}
-# example
+# s3 example
+{{- end }}
+
+{{- if has "s3-bucket-notification" .units }}
+# s3 bucket notification example
 {{- end }}
 
 {{- if has "rds-lambda" .units }}
-# example
+# rds lambda example
+{{- end }}
+
+{{- if has "rds" .units }}
+# rds example
+{{- end }}
+
+{{- if has "rds-snapshot" .units }}
+# rds snapshot example
 {{- end }}
 
 {{- if has "secrets-manager" .units }}
-# example
+# secrets manager example
+{{- end }}
+
+{{- if has "ssm-parameter" .units }}
+# ssm parameter example
 {{- end }}
 
 {{- if has "cloudfront" .units }}
-# example
+# cloudfront example
+{{- end }}
+
+{{- if has "cloudwatch-logs" .units }}
+# cloudwatch logs example
+{{- end }}
+
+{{- if has "cloudwatch-metrics" .units }}
+# cloudwatch metrics example
 {{- end }}
 
 {{- if has "api-gateway" .units }}
-# example
+# api gateway example
+{{- end }}
+
+{{- if has "api-gateway-v2" .units }}
+# api gateway v2 example
+
 {{- end }}
 
 {{- if has "route53" .units }}
-# example
+# route53 example
+{{- end }}
+
+{{- if has "sqs" .units }}
+# sqs example
+{{- end }}
+
+{{- if has "sns" .units }}
+# sns example
 {{- end }}
 
 {{- if has "webacl" .units }}
-# example
+# webacl example
+{{- end }}
+
+{{- if has "waf" .units }}
+# waf example
+{{- end }}
+
+{{- if has "waf-regex" .units }}
+# waf regex example
 {{- end }}
 
 {{- if has "acm" .units }}
-# example
+# acm example
+{{- end }}
+
+{{- if has "cloudtrail" .units }}
+# cloudtrail example
 {{- end }}
 
 {{- if has "aws-lbc" .units }}
-# example
+# aws load balancer controller example
+{{- end }}
+
+{{- if has "aws-load-balancer-controller" .units }}
+# aws load balancer controller example
 {{- end }}
 
 {{- if has "ebs-csi-driver" .units }}
-# example
+# ebs csi driver example
+{{- end }}
+
+{{- if has "ebs-csi-driver-iam" .units }}
+# ebs csi driver iam example
+{{- end }}
+
+{{- if has "ebs-csi-driver-policy" .units }}
 {{- end }}
