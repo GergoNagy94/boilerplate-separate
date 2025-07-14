@@ -138,7 +138,6 @@ hooks:
 
           echo -e "${COLOR_GREEN} Code Factory Terragrunt Stack Boilerplate${COLOR_RESET}"
           echo -e "${COLOR_GREEN} Starting Terragrunt Stack generation for ${COLOR_HIGHLIGHT}{{.ProjectName}}${COLOR_SUCCESS}...${COLOR_RESET}"
-          echo ""
 
   after:
     - command: "bash"
