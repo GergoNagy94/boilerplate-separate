@@ -15,9 +15,9 @@ repos:
       - id: terraform_tflint
         exclude: ^units/
 
-      - id: terraform_tfsec
+      - id: terraform_trivy
         args:
-          - --args=--minimum-severity=HIGH
+          - --args=--severity=HIGH,CRITICAL
         exclude: ^units/
 
       - id: terraform_checkov
@@ -26,11 +26,17 @@ repos:
           - --args=--compact
         exclude: ^units/
 
-      - id: terragrunt_validate
-        exclude: ^units/
-
       - id: terragrunt_fmt
         exclude: ^units/
+
+  - repo: local
+    hooks:
+      - id: terragrunt_stack_validate
+        name: Terragrunt Stack Validate
+        entry: bash -c 'for stack in $(find infrastructure/live -name "terragrunt.stack.hcl" -exec dirname {} \;); do cd "$stack" && mise exec -- terragrunt validate --all; done'
+        language: system
+        files: terragrunt\.stack\.hcl$
+        pass_filenames: false
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
