@@ -71,4 +71,4 @@ hooks:
           fi
           
           echo -e "${GREEN}Stack configuration generated successfully!${NC}"
-          echo "Generated units: {{ range $i, $unit := .units }}{{if $i}}, {{end}}{{ $unit }}{{ end }}"
+          echo "${GREEN}Generated units: {{ range $i, $unit := .units }}{{if $i}}, {{end}}{{ $unit }}{{ end }}${NC}"
