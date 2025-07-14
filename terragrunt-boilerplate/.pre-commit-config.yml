@@ -26,8 +26,8 @@ repos:
           - --args=--compact
         exclude: ^units/
 
-      #      - id: terragrunt_validate
-      #        exclude: ^units/
+      - id: terragrunt_validate
+        exclude: ^units/
 
       - id: terragrunt_fmt
         exclude: ^units/
