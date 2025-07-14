@@ -15,7 +15,7 @@ locals {
     Maintaner   = "Terragrunt"
   }
 }
-{{ if or (eq .InfrastructurePreset "foundation") (eq .InfrastructurePreset "eks-auto") (eq .InfrastructurePreset "eks-managed") (eq .InfrastructurePreset "serverless") }}
+{{ if or (eq .InfrastructurePreset "vpc") (eq .InfrastructurePreset "eks-auto") (eq .InfrastructurePreset "eks-managed") (eq .InfrastructurePreset "serverless") }}
 unit "vpc" {
   source = "../../../../units/vpc"
   path   = "vpc"
