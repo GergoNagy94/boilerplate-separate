@@ -8,7 +8,7 @@ variables:
       - length-3-20
 
   - name: ProjectVersion
-    description: "semantic versioning format: x.y.z"
+    description: "(semantic versioning format: x.y.z)"
     order: 2
     type: string
     default: "1.0.0"
@@ -17,7 +17,7 @@ variables:
       - semver
 
   - name: OrganizationId
-    description: "format: o-xxxxxxxxxx"
+    description: "(format: o-xxxxxxxxxx)"
     order: 3
     type: string
     validations:
@@ -25,7 +25,7 @@ variables:
       - length-12-34
 
   - name: DevelopmentAccountId
-    description: "12 digits"
+    description: "(exactly 12 digits)"
     order: 4
     type: string
     validations:
@@ -34,6 +34,7 @@ variables:
       - digit
 
   - name: ManagementAccountId
+    description: "(exactly 12 digits)"
     order: 5
     type: string
     validate:
@@ -41,6 +42,7 @@ variables:
       - length-12
 
   - name: MonitoringAccountId
+    description: "(exactly 12 digits)"
     order: 6
     type: string
     validate:
@@ -48,6 +50,7 @@ variables:
       - length-12
 
   - name: ProductionAccountId
+    description: "(exactly 12 digits)"
     order: 7
     type: string
     validate:
@@ -55,7 +58,7 @@ variables:
       - length-12
 
   - name: DevelopmentEmail
-    description: "valid email format"
+    description: "(valid email format)"
     order: 8
     type: string
     validations:
@@ -63,7 +66,7 @@ variables:
       - email
 
   - name: ManagementEmail
-    description: "valid email format"
+    description: "(valid email format)"
     order: 9
     type: string
     validations:
@@ -71,7 +74,7 @@ variables:
       - email
 
   - name: MonitoringEmail
-    description: "valid email format"
+    description: "(valid email format)"
     order: 10
     type: string
     validations:
@@ -79,7 +82,7 @@ variables:
       - email
 
   - name: MonitoringEmail
-    description: "valid email format"
+    description: "(valid email format)"
     order: 11
     type: string
     validations:
@@ -87,36 +90,6 @@ variables:
       - email
 
   - name: DevelopmentRegion
-    order: 11
-    type: enum
-    default: "eu-west-1"
-    options:
-      - "us-east-1"
-      - "us-east-2"
-      - "us-west-1"
-      - "us-west-2"
-      - "eu-west-1"
-      - "eu-west-2"
-      - "eu-west-3"
-      - "eu-central-1"
-      - "eu-central-2"
-      - "eu-north-1"
-      - "eu-south-1"
-      - "eu-south-2"
-      - "ap-northeast-1"
-      - "ap-northeast-2"
-      - "ap-northeast-3"
-      - "ap-southeast-1"
-      - "ap-southeast-2"
-      - "ap-southeast-3"
-      - "ap-south-1"
-      - "ap-south-2"
-      - "ca-central-1"
-      - "sa-east-1"
-    validate:
-      - required
-
-  - name: ManagementRegion
     order: 12
     type: enum
     default: "eu-west-1"
@@ -146,7 +119,7 @@ variables:
     validate:
       - required
 
-  - name: MonitoringRegion
+  - name: ManagementRegion
     order: 13
     type: enum
     default: "eu-west-1"
@@ -176,8 +149,38 @@ variables:
     validate:
       - required
 
-  - name: ProductionRegion
+  - name: MonitoringRegion
     order: 14
+    type: enum
+    default: "eu-west-1"
+    options:
+      - "us-east-1"
+      - "us-east-2"
+      - "us-west-1"
+      - "us-west-2"
+      - "eu-west-1"
+      - "eu-west-2"
+      - "eu-west-3"
+      - "eu-central-1"
+      - "eu-central-2"
+      - "eu-north-1"
+      - "eu-south-1"
+      - "eu-south-2"
+      - "ap-northeast-1"
+      - "ap-northeast-2"
+      - "ap-northeast-3"
+      - "ap-southeast-1"
+      - "ap-southeast-2"
+      - "ap-southeast-3"
+      - "ap-south-1"
+      - "ap-south-2"
+      - "ca-central-1"
+      - "sa-east-1"
+    validate:
+      - required
+
+  - name: ProductionRegion
+    order: 15
     type: enum
     default: "eu-west-1"
     options:
@@ -208,7 +211,7 @@ variables:
 
   - name: StateRegion
     description: "Region for Terraform state bucket"
-    order: 15
+    order: 16
     type: enum
     default: "eu-central-1"
     options:
@@ -245,7 +248,7 @@ variables:
       • serverless     (vpc, rds, lambda, secrets manager)
       • eks-auto       (vpc, eks-automod)
       • eks-managed    (vpc, eks-managed-nodegroup)
-    order: 16
+    order: 17
     type: enum
     options:
       - foundation
@@ -259,7 +262,7 @@ variables:
 
   - name: OpentofuVersion
     description: "OpenTofu version"
-    order: 17
+    order: 18
     type: string
     default: "1.10.2"
     validate:
@@ -268,7 +271,7 @@ variables:
 
   - name: TerragruntVersion
     description: "Terragrunt version"
-    order: 18
+    order: 19
     type: string
     default: "0.82.3"
     validate:
@@ -294,7 +297,6 @@ hooks:
 
           echo -e "${COLOR_GREEN} Code Factory Terragrunt Stack Boilerplate${COLOR_RESET}"
           echo -e "${COLOR_GREEN} Starting Terragrunt Stack generation for ${COLOR_HIGHLIGHT}{{.ProjectName}}${COLOR_SUCCESS}...${COLOR_RESET}"
-          echo ""
 
   after:
     - command: "bash"
