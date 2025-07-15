@@ -1,5 +1,5 @@
 variables:
-  - name: units
+  - name: Units
     description: |
       acm
       api-gateway
@@ -32,12 +32,14 @@ hooks:
           GREEN='\033[0;32m'
           NC='\033[0m'
           
-          echo "Checking for existing files in {{ outputFolder }}..."
+          UNITS_DIR="{{ range $i, $unit := .Units }}{{if $i}}-{{end}}{{ $unit | lower }}{{ end }}"
+          
+          echo "Checking for existing files in {{ outputFolder }}/${UNITS_DIR}..."
           
           OVERWRITE_DETECTED=false
           
-          if [ -f "{{ outputFolder }}/terragrunt.stack.hcl" ]; then
-            echo -e "${RED}ERROR: File 'terragrunt.stack.hcl' already exists in {{ outputFolder }}!${NC}"
+          if [ -f "{{ outputFolder }}/${UNITS_DIR}/terragrunt.stack.hcl" ]; then
+            echo -e "${RED}ERROR: File 'terragrunt.stack.hcl' already exists in {{ outputFolder }}/${UNITS_DIR}!${NC}"
             OVERWRITE_DETECTED=true
           fi
           
@@ -63,12 +65,14 @@ hooks:
           GREEN='\033[0;32m'
           NC='\033[0m'
           
-          echo "Verifying generated files in {{ outputFolder }}..."
+          UNITS_DIR="{{ range $i, $unit := .Units }}{{if $i}}-{{end}}{{ $unit | lower }}{{ end }}"
           
-          if [ ! -f "{{ outputFolder }}/terragrunt.stack.hcl" ]; then
+          echo "Verifying generated files in {{ outputFolder }}/${UNITS_DIR}..."
+          
+          if [ ! -f "{{ outputFolder }}/${UNITS_DIR}/terragrunt.stack.hcl" ]; then
             echo -e "${RED}ERROR: Expected file 'terragrunt.stack.hcl' was not created!${NC}"
             exit 1
           fi
           
           echo -e "${GREEN}Stack configuration generated successfully!${NC}"
-          echo "${GREEN}Generated units: {{ range $i, $unit := .units }}{{if $i}}, {{end}}{{ $unit }}{{ end }}${NC}"
+          echo "${GREEN}Generated units: {{ range $i, $unit := .Units }}{{if $i}}, {{end}}{{ $unit }}{{ end }}${NC}"

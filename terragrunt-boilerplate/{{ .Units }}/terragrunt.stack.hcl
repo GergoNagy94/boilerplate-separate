@@ -10,7 +10,7 @@ locals {
   }
 }
 
-{{- if has "vpc" .units }}
+{{- if has "vpc" .Units }}
 unit "vpc" {
   source = "../../units/vpc"
   path   = "vpc"
@@ -34,10 +34,10 @@ unit "vpc" {
     create_flow_log_cloudwatch_iam_role  = false
     create_flow_log_cloudwatch_log_group = false
 
-    {{- if has "eks" .units }}
+    {{- if has "eks" .Units }}
     cluster_name = "${local.project}-${local.env}-cluster"
     {{- end }}
-    {{- if has "rds-lambda" .units }}
+    {{- if has "rds-lambda" .Units }}
     database_subnets                   = ["10.0.201.0/24", "10.0.202.0/24", "10.0.203.0/24"]
     create_database_subnet_group       = true
     create_database_subnet_route_table = true
@@ -63,7 +63,7 @@ unit "vpc" {
 }
 {{- end }}
 
-{{- if has "kms" .units }}
+{{- if has "kms" .Units }}
 unit "kms" {
   source = "../../units/kms"
   path   = "kms"
@@ -87,7 +87,7 @@ unit "kms" {
 }
 {{- end }}
 
-{{- if has "route53-zones" .units }}
+{{- if has "route53-zones" .Units }}
 unit "route53_zones" {
   source = "../../units/route53-zones"
   path   = "route53-zones"
@@ -109,13 +109,13 @@ unit "route53_zones" {
 }
 {{- end }}
 
-{{- if has "acm" .units }}
+{{- if has "acm" .Units }}
 unit "acm" {
   source = "../../units/acm"
   path   = "acm"
 
   values = {
-    {{- if has "route53-zones" .units }}
+    {{- if has "route53-zones" .Units }}
     route53_path = "../route53-zones"
     {{- end }}
     domain_name               = "example.com"
@@ -129,7 +129,7 @@ unit "acm" {
 }
 {{- end }}
 
-{{- if has "webacl" .units }}
+{{- if has "webacl" .Units }}
 unit "webacl" {
   source = "../../units/webacl"
   path   = "webacl"
@@ -176,7 +176,7 @@ unit "webacl" {
 }
 {{- end }}
 
-{{- if has "s3" .units }}
+{{- if has "s3" .Units }}
 unit "s3" {
   source = "../../units/s3"
   path   = "s3"
@@ -241,20 +241,20 @@ resource "random_string" "bucket_suffix" {
 }
 {{- end }}
 
-{{- if has "cloudfront" .units }}
+{{- if has "cloudfront" .Units }}
 unit "cloudfront" {
   source = "../../units/cloudfront"
   path   = "cloudfront"
 
   values = {
-    {{- if has "s3" .units }}
+    {{- if has "s3" .Units }}
     s3_path = "../s3"
     {{- end }}
-    {{- if has "webacl" .units }}
+    {{- if has "webacl" .Units }}
     webacl_path = "../webacl"
     enable_waf  = true
     {{- end }}
-    {{- if has "acm" .units }}
+    {{- if has "acm" .Units }}
     acm_path               = "../acm"
     use_custom_certificate = true
     aliases                = ["www.example.com", "example.com"]
@@ -291,16 +291,16 @@ unit "cloudfront" {
 }
 {{- end }}
 
-{{- if has "route53" .units }}
+{{- if has "route53" .Units }}
 unit "route53_records" {
   source = "../../units/route53"
   path   = "route53-records"
 
   values = {
-    {{- if has "cloudfront" .units }}
+    {{- if has "cloudfront" .Units }}
     cloudfront_path = "../cloudfront"
     {{- end }}
-    {{- if has "route53-zones" .units }}
+    {{- if has "route53-zones" .Units }}
     hosted_zone_id = "dependency.route53_zones.zone_id"
     {{- else }}
     hosted_zone_id = "<ACTUAL ZONE ID>"  # Replace with actual zone ID
@@ -311,7 +311,7 @@ unit "route53_records" {
 
     additional_records = [
       {
-        {{- if has "route53-zones" .units }}
+        {{- if has "route53-zones" .Units }}
         zone_id = "dependency.route53_zones.zone_id"
         {{- else }}
         zone_id = "<ACTUAL ZONE ID>"  # Replace with actual zone ID
@@ -330,7 +330,7 @@ unit "route53_records" {
 }
 {{- end }}
 
-{{- if has "secrets-manager" .units }}
+{{- if has "secrets-manager" .Units }}
 unit "secrets_manager" {
   source = "../../units/secrets-manager"
   path   = "secrets-manager"
@@ -342,7 +342,7 @@ unit "secrets_manager" {
     secret_string = jsonencode({
       username = "admin"
       password = "MySecurePassword123!"
-      {{- if has "rds-lambda" .units }}
+      {{- if has "rds-lambda" .Units }}
       engine = "mysql"
       host   = "dependency.rds.endpoint"
       port   = 3306
@@ -365,16 +365,16 @@ unit "secrets_manager" {
 }
 {{- end }}
 
-{{- if has "rds-lambda" .units }}
+{{- if has "rds-lambda" .Units }}
 unit "rds" {
   source = "../../units/rds-lambda"
   path   = "rds"
 
   values = {
-    {{- if has "vpc" .units }}
+    {{- if has "vpc" .Units }}
     vpc_path = "../vpc"
     {{- end }}
-    {{- if has "secrets-manager" .units }}
+    {{- if has "secrets-manager" .Units }}
     secrets_manager_path = "../secrets-manager"
     {{- end }}
 
@@ -432,19 +432,19 @@ unit "rds" {
 }
 {{- end }}
 
-{{- if has "lambda" .units }}
+{{- if has "lambda" .Units }}
 unit "lambda" {
   source = "../../units/lambda"
   path   = "lambda"
 
   values = {
-    {{- if has "vpc" .units }}
+    {{- if has "vpc" .Units }}
     vpc_path = "../vpc"
     {{- end }}
-    {{- if has "rds-lambda" .units }}
+    {{- if has "rds-lambda" .Units }}
     rds_path = "../rds"
     {{- end }}
-    {{- if has "secrets-manager" .units }}
+    {{- if has "secrets-manager" .Units }}
     secrets_manager_path = "../secrets-manager"
     {{- end }}
 
@@ -462,7 +462,7 @@ unit "lambda" {
       LOG_LEVEL   = "INFO"
       ENVIRONMENT = local.env
       APP_NAME    = "${local.project}-function"
-      {{- if has "rds-lambda" .units }}
+      {{- if has "rds-lambda" .Units }}
       DB_CONNECTION_POOL = "10"
       {{- end }}
     }
@@ -481,13 +481,13 @@ unit "lambda" {
 }
 {{- end }}
 
-{{- if has "api-gateway" .units }}
+{{- if has "api-gateway" .Units }}
 unit "api_gateway" {
   source = "../../units/api-gateway"
   path   = "api-gateway"
 
   values = {
-    {{- if has "lambda" .units }}
+    {{- if has "lambda" .Units }}
     lambda_path = "../lambda"
     {{- end }}
 
@@ -530,16 +530,16 @@ unit "api_gateway" {
 }
 {{- end }}
 
-{{- if has "eks" .units }}
+{{- if has "eks" .Units }}
 unit "eks" {
   source = "../../units/eks"
   path   = "eks"
 
   values = {
-    {{- if has "vpc" .units }}
+    {{- if has "vpc" .Units }}
     vpc_path = "../vpc"
     {{- end }}
-    {{- if has "kms" .units }}
+    {{- if has "kms" .Units }}
     kms_path = "../kms"
     {{- end }}
 
@@ -572,7 +572,7 @@ unit "eks" {
 
     enable_irsa = true
 
-    {{- if has "kms" .units }}
+    {{- if has "kms" .Units }}
     enable_kms_encryption = true
     {{- end }}
 
@@ -591,23 +591,23 @@ unit "eks" {
 }
 {{- end }}
 
-{{- if has "ebs-csi-driver" .units }}
+{{- if has "ebs-csi-driver" .Units }}
 unit "ebs_csi_driver" {
   source = "../../units/ebs-csi-driver"
   path   = "ebs-csi-driver"
 
   values = {
-    {{- if has "eks" .units }}
+    {{- if has "eks" .Units }}
     eks_path = "../eks"
     {{- end }}
-    {{- if has "kms" .units }}
+    {{- if has "kms" .Units }}
     kms_path = "../kms"
     {{- end }}
 
     role_name                  = "ebs-csi-driver-role"
     namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
 
-    {{- if has "kms" .units }}
+    {{- if has "kms" .Units }}
     enable_kms_encryption = true
     {{- end }}
 
@@ -619,13 +619,13 @@ unit "ebs_csi_driver" {
 }
 {{- end }}
 
-{{- if has "aws-lbc" .units }}
+{{- if has "aws-lbc" .Units }}
 unit "aws_load_balancer_controller" {
   source = "../../units/aws-lbc"
   path   = "aws-load-balancer-controller"
 
   values = {
-    {{- if has "eks" .units }}
+    {{- if has "eks" .Units }}
     eks_path = "../eks"
     {{- end }}
 
@@ -658,13 +658,13 @@ unit "aws_load_balancer_controller" {
 }
 {{- end }}
 
-{{- if has "iam-role" .units }}
+{{- if has "iam-role" .Units }}
 unit "additional_iam_roles" {
   source = "../../units/iam-role"
   path   = "additional-iam-roles"
 
   values = {
-    {{- if has "eks" .units }}
+    {{- if has "eks" .Units }}
     eks_path = "../eks"
     {{- end }}
 
