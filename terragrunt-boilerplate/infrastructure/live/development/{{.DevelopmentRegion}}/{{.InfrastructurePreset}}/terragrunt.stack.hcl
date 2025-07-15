@@ -21,10 +21,10 @@ unit "vpc" {
   path   = "vpc"
 
   values = {
-    name = "{local.project}-{local.env}-vpc"
+    name = "${local.project}-${local.env}-vpc"
     cidr = "10.0.0.0/16"
 
-    azs             = ["{local.region}a", "{local.region}b", "{local.region}c"]
+    azs             = ["${local.region}a", "${local.region}b", "${local.region}c"]
     private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
     public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 
@@ -40,7 +40,7 @@ unit "vpc" {
     create_flow_log_cloudwatch_log_group = false
 
     {{ if or (eq .InfrastructurePreset "eks-auto") (eq .InfrastructurePreset "eks-managed") }}
-    cluster_name = "{local.project}-{local.env}-cluster"
+    cluster_name = "${local.project}-${local.env}-cluster"
     {{ end }}
     {{ if eq .InfrastructurePreset "serverless" }}
     database_subnets                   = ["10.0.201.0/24", "10.0.202.0/24", "10.0.203.0/24"]
@@ -61,9 +61,9 @@ unit "vpc" {
     }
     {{ end }}
     tags = {
-      Name        = "{local.project}-{local.env}-vpc"
+      Name        = "${local.project}-${local.env}-vpc"
       Environment = "development"
-      Project     = "{local.project}"
+      Project     = "${local.project}"
       ManagedBy   = "Terragrunt"
     }
   }
@@ -85,7 +85,7 @@ unit "route53_zones" {
     }
 
     tags = {
-      Name = "{local.project}-dns-zones"
+      Name = "${local.project}-dns-zones"
     }
   }
 }
@@ -101,7 +101,7 @@ unit "acm" {
     wait_for_validation       = true
 
     tags = {
-      Name = "{local.project}-ssl"
+      Name = "${local.project}-ssl"
     }
   }
 }
@@ -111,7 +111,7 @@ unit "webacl" {
   path   = "webacl"
 
   values = {
-    name  = "{local.project}-waf"
+    name  = "${local.project}-waf"
     scope = "CLOUDFRONT"
 
     rules = [
@@ -146,7 +146,7 @@ unit "webacl" {
     ]
 
     tags = {
-      Name = "{local.project}-waf"
+      Name = "${local.project}-waf"
     }
   }
 }
@@ -156,7 +156,7 @@ unit "s3" {
   path   = "s3"
 
   values = {
-    bucket_name = "{local.project}-static-site-12345"
+    bucket_name = "${local.project}-static-site-12345"
 
     website = {
       index_document = "index.html"
@@ -177,7 +177,7 @@ unit "s3" {
           Effect    = "Allow"
           Principal = "*"
           Action    = "s3:GetObject"
-          Resource  = "arn:aws:s3:::{local.project}-static-site-12345/*"
+          Resource  = "arn:aws:s3:::${local.project}-static-site-12345/*"
         }
       ]
     })
@@ -203,7 +203,7 @@ unit "s3" {
     ]
 
     tags = {
-      Name = "{local.project}-static-site"
+      Name = "${local.project}-static-site"
     }
   }
 }
@@ -245,7 +245,7 @@ unit "cloudfront" {
     ]
 
     tags = {
-      Name = "{local.project}-cloudfront"
+      Name = "${local.project}-cloudfront"
     }
   }
 }
@@ -273,7 +273,7 @@ unit "route53_records" {
     ]
 
     tags = {
-      Name = "{local.project}-dns-records"
+      Name = "${local.project}-dns-records"
     }
   }
 }
@@ -310,7 +310,7 @@ unit "eks" {
     vpc_path = "../vpc"
     kms_path = "../kms"
 
-    cluster_name    = "{local.project}-auto-cluster"
+    cluster_name    = "${local.project}-auto-cluster"
     cluster_version = "1.31"
 
     enable_auto_mode              = true
@@ -351,7 +351,7 @@ unit "eks" {
     node_security_group_additional_rules    = {}
 
     tags = {
-      Name        = "{local.project}-auto-cluster"
+      Name        = "${local.project}-auto-cluster"
       Environment = "development"
       ManagedBy   = "Terragrunt"
       EKSMode     = "Auto"
@@ -399,7 +399,166 @@ unit "aws_load_balancer_controller" {
 
     helm_chart_values = [
       <<-EOT
-      clusterName: {local.project}-auto-cluster
+      clusterName: ${local.project}-auto-cluster
+      serviceAccount:
+        create: true
+        name: aws-load-balancer-controller
+      region: us-east-1
+      vpcId: vpc-placeholder  # Will be populated by the module
+      EOT
+    ]
+
+    tags = {
+      Name        = "aws-load-balancer-controller"
+      Environment = "development"
+      Purpose     = "Load-Balancer-Controller"
+    }
+  }
+}
+
+unit "additional_iam_roles" {
+  source = "../../../../../units/iam-role"
+  path   = "additional-iam-roles"
+
+  values = {
+    eks_path = "../eks"
+
+    role_name = "external-dns-role"
+
+    namespace_service_accounts = ["kube-system:external-dns"]
+
+    attach_external_dns_policy = true
+
+    role_policy_arns = {}
+
+    tags = {
+      Name        = "external-dns-role"
+      Environment = "development"
+      Purpose     = "External-DNS"
+    }
+  }
+}
+{{ end }}
+{{ if eq .InfrastructurePreset "eks-managed" }}
+unit "kms" {
+  source = "../../../../../units/kms"
+  path   = "kms"
+
+  values = {
+    description = "KMS key for EKS cluster encryption"
+    aliases     = ["alias/eks-cluster-encryption"]
+
+    key_administrators = [
+      "arn:aws:iam::123456789012:root",
+      "arn:aws:iam::123456789012:role/terragrunt-execution-role"
+    ]
+
+    deletion_window_in_days = 7
+
+    tags = {
+      Name        = "eks-cluster-kms-key"
+      Environment = "development"
+      Purpose     = "EKS-Encryption"
+    }
+  }
+}
+
+unit "eks" {
+  source = "../../../../../units/eks"
+  path   = "eks"
+
+  values = {
+    vpc_path = "../vpc"
+    kms_path = "../kms"
+
+    cluster_name    = "${local.project}-managed-cluster"
+    cluster_version = "1.31"
+
+    enable_auto_mode              = false
+    bootstrap_self_managed_addons = false
+
+    cluster_endpoint_public_access       = true
+    cluster_endpoint_private_access      = true
+    cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"] # RESTRICT IN PRODUCTION
+
+    authentication_mode = "API_AND_CONFIG_MAP"
+
+    access_entries = {
+      admin = {
+        principal_arn     = "arn:aws:iam::123456789012:role/eks-admin-role" # BOILERPLATE ADMIN ROLE INPUT
+        kubernetes_groups = ["system:masters"]
+        policy_associations = {
+          admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    }
+
+    enable_irsa = true
+
+    enable_kms_encryption = true
+
+    cluster_enabled_log_types              = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+    cloudwatch_log_group_retention_in_days = 14
+    create_cloudwatch_log_group            = true
+
+    cluster_security_group_additional_rules = {}
+    node_security_group_additional_rules    = {}
+
+    tags = {
+      Name        = "${local.project}-managed-cluster"
+      Environment = "development"
+      ManagedBy   = "Terragrunt"
+      EKSMode     = "Managed"
+    }
+  }
+}
+
+unit "ebs_csi_driver" {
+  source = "../../../../../units/ebs-csi-driver"
+  path   = "ebs-csi-driver"
+
+  values = {
+    eks_path = "../eks"
+    kms_path = "../kms"
+
+    role_name                  = "ebs-csi-driver-role"
+    namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+
+    enable_kms_encryption = true
+
+    tags = {
+      Name        = "ebs-csi-driver-role"
+      Environment = "development"
+      Purpose     = "EBS-CSI-Driver"
+    }
+  }
+}
+
+unit "aws_load_balancer_controller" {
+  source = "../../../../../units/aws-lbc"
+  path   = "aws-load-balancer-controller"
+
+  values = {
+    eks_path = "../eks"
+
+    helm_chart_name         = "aws-load-balancer-controller"
+    helm_chart_release_name = "aws-load-balancer-controller"
+    helm_chart_repo         = "https://aws.github.io/eks-charts"
+    helm_chart_version      = "1.8.4"
+
+    namespace            = "kube-system"
+    service_account_name = "aws-load-balancer-controller"
+
+    irsa_role_name_prefix = "aws-load-balancer-controller"
+
+    helm_chart_values = [
+      <<-EOT
+      clusterName: ${local.project}-managed-cluster
       serviceAccount:
         create: true
         name: aws-load-balancer-controller
@@ -445,7 +604,7 @@ unit "secrets_manager" {
   path   = "secrets-manager"
 
   values = {
-    name        = "{local.project}-{local.env}-db-credentials"
+    name        = "${local.project}-${local.env}-db-credentials"
     description = "Database credentials for serverless application"
 
     db_username = "dbadmin"
@@ -468,7 +627,7 @@ unit "secrets_manager" {
     block_public_policy = true
 
     tags = {
-      Name        = "{local.project}-{local.env}-db-credentials"
+      Name        = "${local.project}-${local.env}-db-credentials"
       Environment = "development"
       Purpose     = "Database-Credentials"
     }
@@ -483,7 +642,7 @@ unit "rds" {
     vpc_path             = "../vpc"
     secrets_manager_path = "../secrets-manager"
 
-    identifier = "{local.project}-{local.env}-db"
+    identifier = "${local.project}-${local.env}-db"
 
     engine               = "mysql"
     engine_version       = "8.0.39"
@@ -531,7 +690,7 @@ unit "rds" {
     ]
 
     tags = {
-      Name        = "{local.project}-{local.env}-database"
+      Name        = "${local.project}-${local.env}-database"
       Environment = "development"
       Purpose     = "Application-Database"
     }
@@ -547,7 +706,7 @@ unit "lambda" {
     rds_path             = "../rds"
     secrets_manager_path = "../secrets-manager"
 
-    function_name = "{local.project}-app"
+    function_name = "${local.project}-app"
     description   = "Main serverless application function"
     handler       = "lambda_function.lambda_handler"
     runtime       = "python3.11"
@@ -559,12 +718,12 @@ unit "lambda" {
 
     # Option 2: S3 source code
     # s3_bucket = "my-lambda-deployments"
-    # s3_key    = "{local.project}-{local.env}/lambda.zip"
+    # s3_key    = "${local.project}-${local.env}/lambda.zip"
 
     environment_variables = {
       LOG_LEVEL          = "INFO"
       ENVIRONMENT        = "development"
-      APP_NAME           = "{local.project}-app"
+      APP_NAME           = "${local.project}-app"
       DB_CONNECTION_POOL = "10"
     }
 
@@ -577,7 +736,7 @@ unit "lambda" {
     tracing_config_mode = "Active"
 
     tags = {
-      Name        = "{local.project}-app"
+      Name        = "${local.project}-app"
       Environment = "development"
       Purpose     = "Main-Application-Function"
     }
@@ -591,8 +750,8 @@ unit "api_gateway" {
   values = {
     lambda_path = "../lambda"
 
-    name        = "{local.project}-api"
-    description = "HTTP API for {local.project} application"
+    name        = "${local.project}-api"
+    description = "HTTP API for ${local.project} application"
 
     cors_configuration = {
       allow_headers     = ["content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token"]
@@ -628,7 +787,7 @@ unit "api_gateway" {
     })
 
     tags = {
-      Name        = "{local.project}-api"
+      Name        = "${local.project}-api"
       Environment = "development"
       Purpose     = "Application-API"
     }
