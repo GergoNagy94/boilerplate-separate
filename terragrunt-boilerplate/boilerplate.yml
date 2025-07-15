@@ -27,22 +27,20 @@ hooks:
         - "-c"
         - |
           set -e
-          
+
           RED='\033[0;31m'
           GREEN='\033[0;32m'
           NC='\033[0m'
-          
-          UNITS_DIR="{{ range $i, $unit := .Units }}{{if $i}}-{{end}}{{ $unit | lower }}{{ end }}"
-          
-          echo "Checking for existing files in {{ outputFolder }}/${UNITS_DIR}..."
-          
+
+          echo "Checking for existing files in {{ outputFolder }}..."
+
           OVERWRITE_DETECTED=false
-          
-          if [ -f "{{ outputFolder }}/${UNITS_DIR}/terragrunt.stack.hcl" ]; then
-            echo -e "${RED}ERROR: File 'terragrunt.stack.hcl' already exists in {{ outputFolder }}/${UNITS_DIR}!${NC}"
+
+          if [ -f "{{ outputFolder }}/terragrunt.stack.hcl" ]; then
+            echo -e "${RED}ERROR: File 'terragrunt.stack.hcl' already exists in {{ outputFolder }}!${NC}"
             OVERWRITE_DETECTED=true
           fi
-          
+
           if [ "$OVERWRITE_DETECTED" = true ]; then
             echo ""
             echo -e "${RED}Generation aborted to prevent overwriting existing files.${NC}"
@@ -51,7 +49,7 @@ hooks:
             echo "   - Use a different target directory"
             exit 1
           fi
-          
+
           echo -e "${GREEN}No conflicts detected. Proceeding with generation...${NC}"
 
   after:
@@ -60,19 +58,17 @@ hooks:
         - "-c"
         - |
           set -e
-          
+
           RED='\033[0;31m'
           GREEN='\033[0;32m'
           NC='\033[0m'
-          
-          UNITS_DIR="{{ range $i, $unit := .Units }}{{if $i}}-{{end}}{{ $unit | lower }}{{ end }}"
-          
-          echo "Verifying generated files in {{ outputFolder }}/${UNITS_DIR}..."
-          
-          if [ ! -f "{{ outputFolder }}/${UNITS_DIR}/terragrunt.stack.hcl" ]; then
+
+          echo "Verifying generated files in {{ outputFolder }}..."
+
+          if [ ! -f "{{ outputFolder }}/terragrunt.stack.hcl" ]; then
             echo -e "${RED}ERROR: Expected file 'terragrunt.stack.hcl' was not created!${NC}"
             exit 1
           fi
-          
+
           echo -e "${GREEN}Stack configuration generated successfully!${NC}"
           echo "${GREEN}Generated units: {{ range $i, $unit := .Units }}{{if $i}}, {{end}}{{ $unit }}{{ end }}${NC}"
