@@ -1,0 +1,17 @@
+variables:
+  - name: Type
+    description: "(single-account, multi-account, terragrunt-stack)"
+    type: enum
+    options:
+      - single-account
+      - multi-account
+      - terragrunt-stack
+    validate:
+      - required
+
+hooks:
+  after:
+    - command: bash
+      args:
+        - -c
+        - "{{ if eq .Type \"single-account\" }}boilerplate --template-url \"github.com/GergoNagy94/boilerplate-separate//terragrunt-boilerplate?ref=single-account\" --output-folder {{ outputFolder }}{{ else if eq .Type \"multi-account\" }}boilerplate --template-url \"github.com/GergoNagy94/boilerplate-separate//terragrunt-boilerplate?ref=multy-account\" --output-folder {{ outputFolder }}{{ else if eq .Type \"terragrunt-stack\" }}boilerplate --template-url \"github.com/GergoNagy94/boilerplate-separate//terragrunt-boilerplate?ref=stack\" --output-folder {{ outputFolder }}{{ end }}"
