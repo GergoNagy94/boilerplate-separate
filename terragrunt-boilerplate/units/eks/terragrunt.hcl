@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-eks?ref=v20.31.0"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-eks?ref=v20.37.1"
 }
 
 dependency "vpc" {

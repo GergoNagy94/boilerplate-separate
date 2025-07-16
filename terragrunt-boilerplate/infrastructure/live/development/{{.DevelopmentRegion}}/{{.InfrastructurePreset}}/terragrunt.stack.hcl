@@ -449,8 +449,8 @@ unit "kms" {
     aliases     = ["alias/eks-cluster-encryption"]
 
     key_administrators = [
-      "arn:aws:iam::123456789012:root",
-      "arn:aws:iam::123456789012:role/terragrunt-execution-role"
+      "arn:aws:iam::567749996660:root",
+      "arn:aws:iam::567749996660:role/terragrunt-execution-role"
     ]
 
     deletion_window_in_days = 7
@@ -485,7 +485,7 @@ unit "eks" {
 
     access_entries = {
       admin = {
-        principal_arn     = "arn:aws:iam::123456789012:role/eks-admin-role" # BOILERPLATE ADMIN ROLE INPUT
+        principal_arn     = "arn:aws:iam::567749996660:role/terragrunt-execution-role" # BOILERPLATE ADMIN ROLE INPUT
         kubernetes_groups = ["system:masters"]
         policy_associations = {
           admin = {
@@ -562,8 +562,7 @@ unit "aws_load_balancer_controller" {
       serviceAccount:
         create: true
         name: aws-load-balancer-controller
-      region: us-east-1
-      vpcId: vpc-placeholder  # Will be populated by the module
+      region: ${local.region}
       EOT
     ]
 
