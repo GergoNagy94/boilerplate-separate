@@ -556,6 +556,7 @@ unit "aws_load_balancer_controller" {
 
     irsa_role_name_prefix = "aws-load-balancer-controller"
 
+    # need vpc id?
     helm_chart_values = [
       <<-EOT
       clusterName: ${local.project}-managed-cluster
