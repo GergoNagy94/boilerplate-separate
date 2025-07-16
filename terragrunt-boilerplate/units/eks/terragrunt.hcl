@@ -40,7 +40,10 @@ inputs = {
   cluster_encryption_config = try(values.enable_kms_encryption, false) ? {
     provider_key_arn = dependency.kms.outputs.key_arn
     resources        = ["secrets"]
-  } : {}
+  } : {
+    provider_key_arn = null
+    resources        = []
+  }
 
   authentication_mode = try(values.authentication_mode, "API_AND_CONFIG_MAP")
 

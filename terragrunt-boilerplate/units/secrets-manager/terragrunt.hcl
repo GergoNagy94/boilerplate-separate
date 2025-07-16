@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-secrets-manager?ref=v1.1.2"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-secrets-manager?ref=v1.3.1"
 }
 
 inputs = {

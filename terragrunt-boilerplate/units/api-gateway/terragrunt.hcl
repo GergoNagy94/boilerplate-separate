@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-apigateway-v2?ref=v5.2.0"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-apigateway-v2?ref=v5.3.0"
 }
 
 dependency "lambda" {

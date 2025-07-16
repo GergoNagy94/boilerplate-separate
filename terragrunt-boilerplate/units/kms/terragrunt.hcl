@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-kms?ref=v3.1.1"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-kms?ref=v4.0.0"
 }
 
 inputs = {
