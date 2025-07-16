@@ -12,4 +12,7 @@ gitleaks = "8.27.1"
 PROJECT_NAME = "{{.ProjectName}}"
 PROJECT_VERSION = "{{.ProjectVersion}}"
 
+[tools.pre-commit]
+post_install = "pre-commit install"
+
 TG_PARALLELISM = "5"
