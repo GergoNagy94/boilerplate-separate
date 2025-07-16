@@ -7,8 +7,9 @@ terraform {
 }
 
 inputs = {
-  name  = values.name
-  scope = try(values.scope, "CLOUDFRONT") # CLOUDFRONT for global, REGIONAL for ALB/API Gateway
+  name        = values.name
+  name_prefix = try(values.name_prefix, values.name)
+  scope       = try(values.scope, "CLOUDFRONT") # CLOUDFRONT for global, REGIONAL for ALB/API Gateway
 
   default_action = try(values.default_action, "allow")
 

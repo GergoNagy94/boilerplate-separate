@@ -17,7 +17,8 @@ inputs = {
 
   attach_policy = try(values.attach_policy, false)
   policy        = try(values.policy, null)
-  cors_rule     = try(values.cors_rule, [])
+  
+  cors_rule = try(values.cors_rule, [])
 
   versioning = try(values.versioning, {
     enabled = false

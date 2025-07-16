@@ -12,7 +12,7 @@ locals {
   tags = {
     Project     = local.project
     Environment = local.env
-    Maintaner   = "Terragrunt"
+    Maintainer   = "Terragrunt"
   }
 }
 {{ if or (eq .InfrastructurePreset "vpc") (eq .InfrastructurePreset "eks-auto") (eq .InfrastructurePreset "eks-managed") (eq .InfrastructurePreset "serverless") }}
@@ -112,6 +112,7 @@ unit "webacl" {
 
   values = {
     name  = "${local.project}-waf"
+    name_prefix = "cloudfront"
     scope = "CLOUDFRONT"
 
     rules = [
@@ -231,6 +232,7 @@ unit "cloudfront" {
     default_ttl = 3600
     max_ttl     = 86400
 
+
     custom_error_response = [
       {
         error_code         = 404
@@ -255,16 +257,17 @@ unit "route53_records" {
   path   = "route53-records"
 
   values = {
-    cloudfront_path = "../cloudfront"
-
-    hosted_zone_id = "<ZONE_ID>" # ACTUAL ZONE FROM BOILERPLATE ID OR DEPENDENCY OUTPUT
+    cloudfront_path    = "../cloudfront"
+    route53_zones_path = "../route53-zones"
+    
+    # Specify the domain to get zone ID for
+    primary_domain = "example.com"
 
     domain_names = ["example.com", "www.example.com"]
     enable_ipv6  = true
 
     additional_records = [
       {
-        zone_id = "<ZONE_ID>" # ACTUAL ZONE ID FROM BOILERPLATE
         name    = "example.com"
         type    = "MX"
         ttl     = 300
@@ -288,8 +291,8 @@ unit "kms" {
     aliases     = ["alias/eks-cluster-encryption"]
 
     key_administrators = [
-      "arn:aws:iam::123456789012:root",
-      "arn:aws:iam::123456789012:role/terragrunt-execution-role"
+      "arn:aws:iam::${local.development_account_id}:root",
+      "arn:aws:iam::${local.development_account_id}:role/terragrunt-execution-role"
     ]
 
     deletion_window_in_days = 7
@@ -324,7 +327,7 @@ unit "eks" {
 
     access_entries = {
       admin = {
-        principal_arn     = "arn:aws:iam::123456789012:role/eks-admin-role" # BOILERPLATE ADMIN ROLE INPUT
+        principal_arn     = "arn:aws:iam::${local.development_account_id}:role/eks-admin-role" # BOILERPLATE ADMIN ROLE INPUT
         kubernetes_groups = ["system:masters"]
         policy_associations = {
           admin = {
@@ -449,8 +452,8 @@ unit "kms" {
     aliases     = ["alias/eks-cluster-encryption"]
 
     key_administrators = [
-      "arn:aws:iam::567749996660:root",
-      "arn:aws:iam::567749996660:role/terragrunt-execution-role"
+      "arn:aws:iam::${local.development_account_id}:root",
+      "arn:aws:iam::${local.development_account_id}:role/terragrunt-execution-role"
     ]
 
     deletion_window_in_days = 7
@@ -485,7 +488,7 @@ unit "eks" {
 
     access_entries = {
       admin = {
-        principal_arn     = "arn:aws:iam::567749996660:role/terragrunt-execution-role" # BOILERPLATE ADMIN ROLE INPUT
+        principal_arn     = "arn:aws:iam::${local.development_account_id}:role/terragrunt-execution-role"
         kubernetes_groups = ["system:masters"]
         policy_associations = {
           admin = {
@@ -764,7 +767,7 @@ unit "api_gateway" {
 
     # Domain configuration
     # domain_name                 = "api.yourdomain.com"
-    # domain_name_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+    # domain_name_certificate_arn = "arn:aws:acm:us-east-1:${local.development_account_id}:certificate/12345678-1234-1234-1234-${local.development_account_id}"
     # create_api_domain_name      = true
 
     default_route_settings = {
