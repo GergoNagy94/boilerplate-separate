@@ -8,7 +8,12 @@ locals {
   development_account_email = "{{.EmailDomain}}"
   organization_id           = "{{.OrganizationId}}"
   organization_root_id      = "{{.OrganizationRootId}}"
-  
+  {{ if eq .InfrastructurePreset "web" }}
+  domains = {
+    primary = "example.com"
+    www     = "www.example.com"
+  }
+  {{ end }}
   tags = {
     Project     = local.project
     Environment = local.env
@@ -76,10 +81,10 @@ unit "route53_zones" {
 
   values = {
     zones = {
-      "example.com" = {
-        comment = "Hosted zone for example.com"
+      ${local.domains.primary} = {
+        comment = "Hosted zone for ${local.domains.primary}"
         tags = {
-          Name = "example.com"
+          Name = ${local.domains.primary}
         }
       }
     }
@@ -96,8 +101,8 @@ unit "acm" {
 
   values = {
     route53_path              = "../route53-zones"
-    domain_name               = "example.com"
-    subject_alternative_names = ["www.example.com"]
+    domain_name               = ${local.domains.primary}
+    subject_alternative_names = [${local.domains.www}]
     wait_for_validation       = true
 
     tags = {
@@ -220,7 +225,7 @@ unit "cloudfront" {
     enable_waf             = true
     use_custom_certificate = true
 
-    aliases = ["www.example.com", "example.com"]
+    aliases = ["${local.domains.www}", "${local.domains.primary}"]
     comment = "CloudFront distribution for my web project"
 
     viewer_protocol_policy = "redirect-to-https"
@@ -261,17 +266,17 @@ unit "route53_records" {
     route53_zones_path = "../route53-zones"
     
     # Specify the domain to get zone ID for
-    primary_domain = "example.com"
+    primary_domain = ${local.domains.primary}
 
-    domain_names = ["example.com", "www.example.com"]
+    domain_names = ["${local.domains.primary}", "${local.domains.www}"]
     enable_ipv6  = true
 
     additional_records = [
       {
-        name    = "example.com"
+        name    = ${local.domains.primary}
         type    = "MX"
         ttl     = 300
-        records = ["10 mail.example.com"]
+        records = ["10 mail.${local.domains.primary}"]
       }
     ]
 
