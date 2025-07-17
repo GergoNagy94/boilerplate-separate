@@ -437,6 +437,7 @@ unit "additional_iam_roles" {
     }
   }
 }
+{{ end }}
 {{ if eq .InfrastructurePreset "eks-managed" }}
 unit "kms" {
   source = "../../../../../units/kms"
