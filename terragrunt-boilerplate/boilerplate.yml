@@ -278,13 +278,6 @@ variables:
       - required
       - semver
 
-skip_files:
-  - path: "infrastructure/live/development/db/**/*"
-    if: '{{ ne .InfrastructurePreset "serverless" }}'
-
-  - path: "infrastructure/live/development/src/**/*"
-    if: '{{ ne .InfrastructurePreset "serverless" }}'
-
 hooks:
   before:
     - command: "bash"
