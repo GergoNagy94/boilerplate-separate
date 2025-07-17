@@ -3,12 +3,13 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:umotif-public/terraform-aws-waf-webaclv2?ref=v5.1.0"
+  source = "git::git@github.com:umotif-public/terraform-aws-waf-webaclv2?ref=5.1.2"
 }
 
 inputs = {
-  name  = values.name
-  scope = try(values.scope, "CLOUDFRONT") # CLOUDFRONT for global, REGIONAL for ALB/API Gateway
+  name        = values.name
+  name_prefix = try(values.name_prefix, values.name)
+  scope       = try(values.scope, "CLOUDFRONT") # CLOUDFRONT for global, REGIONAL for ALB/API Gateway
 
   default_action = try(values.default_action, "allow")
 

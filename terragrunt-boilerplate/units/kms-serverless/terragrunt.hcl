@@ -7,7 +7,7 @@ terraform {
 }
 
 inputs = {
-  description = try(values.description, "KMS key for EKS cluster encryption")
+  description = try(values.description, "KMS key for serverless application encryption")
   key_usage   = try(values.key_usage, "ENCRYPT_DECRYPT")
 
   key_administrators = try(values.key_administrators, [])
@@ -16,12 +16,24 @@ inputs = {
 
   key_statements = try(values.key_statements, [
     {
-      sid    = "Allow EKS Service"
+      sid    = "Enable IAM User Permissions"
+      effect = "Allow"
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["arn:aws:iam::${values.account_id}:root"]
+        }
+      ]
+      actions   = ["kms:*"]
+      resources = ["*"]
+    },
+    {
+      sid    = "Allow Serverless Services"
       effect = "Allow"
       principals = [
         {
           type        = "Service"
-          identifiers = ["eks.amazonaws.com"]
+          identifiers = ["secretsmanager.amazonaws.com", "sqs.amazonaws.com", "logs.amazonaws.com"]
         }
       ]
       actions = [
@@ -36,6 +48,9 @@ inputs = {
   ])
 
   aliases = try(values.aliases, [])
+
+  # Enable key rotation for security
+  enable_key_rotation = try(values.enable_key_rotation, true)
 
   deletion_window_in_days = try(values.deletion_window_in_days, 7)
 

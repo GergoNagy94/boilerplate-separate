@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:DNXLabs/terraform-aws-eks-lb-controller?ref=v0.11.0"
+  source = "git::git@github.com:DNXLabs/terraform-aws-eks-lb-controller?ref=0.11.0"
 }
 
 dependency "eks" {

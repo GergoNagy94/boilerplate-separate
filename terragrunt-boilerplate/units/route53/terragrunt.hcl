@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-route53?ref=v4.1.0"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-route53?ref=v5.0.0"
 }
 
 dependency "cloudfront" {
@@ -14,13 +14,23 @@ dependency "cloudfront" {
   }
 }
 
+dependency "route53_zones" {
+  config_path  = values.route53_zones_path
+  skip_outputs = try(values.route53_zones_path, null) == null ? true : false
+  mock_outputs = {
+    route53_zone_zone_id = {
+      "example.com" = "Z123456789"
+    }
+  }
+}
+
 inputs = {
   zones = try(values.zones, {})
 
   records = concat(
     [
       for domain in try(values.domain_names, []) : {
-        zone_id = try(values.hosted_zone_id, null)
+        zone_id = try(values.hosted_zone_id, try(dependency.route53_zones.outputs.route53_zone_zone_id[values.primary_domain], null))
         name    = domain
         type    = "A"
         alias = {
@@ -31,7 +41,7 @@ inputs = {
     ],
     try(values.enable_ipv6, true) ? [
       for domain in try(values.domain_names, []) : {
-        zone_id = try(values.hosted_zone_id, null)
+        zone_id = try(values.hosted_zone_id, try(dependency.route53_zones.outputs.route53_zone_zone_id[values.primary_domain], null))
         name    = domain
         type    = "AAAA"
         alias = {
@@ -41,7 +51,11 @@ inputs = {
       }
     ] : [],
 
-    try(values.additional_records, [])
+    [
+      for record in try(values.additional_records, []) : merge(record, {
+        zone_id = try(record.zone_id, try(values.hosted_zone_id, try(dependency.route53_zones.outputs.route53_zone_zone_id[values.primary_domain], null)))
+      })
+    ]
   )
 
   tags = try(values.tags, {})

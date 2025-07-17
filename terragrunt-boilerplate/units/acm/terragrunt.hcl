@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-acm?ref=v5.1.1"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-acm?ref=v6.0.0"
 }
 
 dependency "route53" {

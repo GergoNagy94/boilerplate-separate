@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-s3-bucket?ref=v4.1.2"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-s3-bucket?ref=v5.2.0"
 }
 
 inputs = {
@@ -17,7 +17,8 @@ inputs = {
 
   attach_policy = try(values.attach_policy, false)
   policy        = try(values.policy, null)
-  cors_rule     = try(values.cors_rule, [])
+  
+  cors_rule = try(values.cors_rule, [])
 
   versioning = try(values.versioning, {
     enabled = false

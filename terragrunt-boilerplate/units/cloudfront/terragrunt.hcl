@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-cloudfront?ref=v3.4.0"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-cloudfront?ref=v5.0.0"
 }
 
 dependency "acm" {
@@ -42,9 +42,7 @@ inputs = {
   origin = {
     s3_bucket = {
       domain_name = dependency.s3.outputs.s3_bucket_bucket_domain_name
-      s3_origin_config = {
-        origin_access_identity = try(values.create_origin_access_identity, true) ? "s3-bucket-oai" : null
-      }
+      s3_origin_config = {}
     }
   }
 
@@ -68,10 +66,8 @@ inputs = {
 
   custom_error_response = try(values.custom_error_response, [])
 
-  create_origin_access_identity = try(values.create_origin_access_identity, true)
-  origin_access_identities = try(values.create_origin_access_identity, true) ? {
-    s3_bucket_oai = "OAI for ${dependency.s3.outputs.s3_bucket_id}"
-  } : {}
+  create_origin_access_identity = false
+  origin_access_identities = {}
 
   viewer_certificate = try(values.use_custom_certificate, false) ? {
     acm_certificate_arn = dependency.acm.outputs.acm_certificate_arn
