@@ -16,13 +16,7 @@ dependency "vpc" {
   }
 }
 
-dependency "secrets_manager" {
-  config_path = values.secrets_manager_path
-  mock_outputs = {
-    secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:db-credentials-AbCdEf"
-    secret_id  = "db-credentials"
-  }
-}
+# Secrets Manager dependency removed - RDS manages secrets automatically
 
 dependency "security_group" {
   config_path = values.security_group_path

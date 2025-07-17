@@ -13,6 +13,8 @@ locals {
     primary = "example.com"
     www     = "www.example.com"
   }
+  {{ if eq .InfrastructurePreset "serverless" }}
+  allow_origins = ["https://exakmpledomain.com", "https://app.exakmpledomain.com"]
   {{ end }}
   tags = {
     Project     = local.project
@@ -679,41 +681,6 @@ unit "additional_iam_roles" {
 }
 {{ end }}
 {{ if eq .InfrastructurePreset "serverless" }}
-unit "secrets_manager" {
-  source = "../../../../../units/secrets-manager"
-  path   = "secrets-manager"
-
-  values = {
-    name        = "${local.project}-${local.env}-db-credentials"
-    description = "Database credentials for serverless application"
-
-    db_username = "dbadmin"
-    db_password = "MySecurePassword123!"
-
-    secret_string = jsonencode({
-      username = "dbadmin"
-      password = "MySecurePassword123!"
-      engine   = "mysql"
-      host     = "placeholder" # Will be updated after RDS creation
-      port     = 3306
-      dbname   = "appdb"
-    })
-
-    enable_rotation = false
-
-    recovery_window_in_days = 7
-    ignore_secret_changes   = true
-
-    block_public_policy = true
-
-    tags = {
-      Name        = "${local.project}-${local.env}-db-credentials"
-      Environment = "development"
-      Purpose     = "Database-Credentials"
-    }
-  }
-}
-
 unit "rds_security_group" {
   source = "../../../../../units/security-group"
   path   = "rds-security-group"
@@ -757,9 +724,9 @@ unit "rds" {
   path   = "rds"
 
   values = {
-    vpc_path             = "../vpc"
-    secrets_manager_path = "../secrets-manager"
-    security_group_path  = "../rds-security-group"
+    vpc_path            = "../vpc"
+    security_group_path = "../rds-security-group"
+    kms_path            = "../kms-serverless"
 
     identifier = "${local.project}-${local.env}-db"
 
@@ -777,7 +744,8 @@ unit "rds" {
     db_name  = "appdb"
     username = "dbadmin"
 
-    manage_master_user_password = true
+    manage_master_user_password   = true
+    master_user_secret_kms_key_id = "alias/${local.project}/${local.env}/serverless"
 
     create_db_parameter_group = true
     create_db_option_group    = false
@@ -792,10 +760,11 @@ unit "rds" {
     performance_insights_enabled          = true
     performance_insights_retention_period = 7
 
-    multi_az = false # SET TO TRUE FOR PROD
+    multi_az = true
 
-    deletion_protection = false # SET TO TRUE FOR PROD
-    skip_final_snapshot = true  # SET TO FALSE FOR PROD
+    deletion_protection = true
+    skip_final_snapshot = false
+    final_snapshot_identifier = "${local.project}-${local.env}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
 
     parameters = [
       {
@@ -872,17 +841,18 @@ unit "lambda" {
   path   = "lambda"
 
   values = {
-    vpc_path             = "../vpc"
-    rds_path             = "../rds"
-    secrets_manager_path = "../secrets-manager"
-    security_group_path  = "../lambda-security-group"
+    vpc_path            = "../vpc"
+    rds_path            = "../rds"
+    security_group_path = "../lambda-security-group"
+    dlq_path            = "../lambda-dlq"
+    kms_path            = "../kms-serverless"
 
     function_name = "${local.project}-app"
     description   = "Main serverless application function"
     handler       = "lambda_function.lambda_handler"
     runtime       = "python3.11"
-    timeout       = 30
-    memory_size   = 512
+    timeout       = 15 
+    memory_size   = 256
 
     # Option 1: Local zip file
     local_existing_package = "${get_parent_terragrunt_dir()}/../../src/lambda_function.zip"
@@ -901,7 +871,7 @@ unit "lambda" {
       DB_CONNECTION_POOL = "10"
     }
 
-    reserved_concurrent_executions = -1
+    reserved_concurrent_executions = 100
 
     layers = []
 
@@ -930,7 +900,7 @@ unit "api_gateway" {
     cors_configuration = {
       allow_headers     = ["content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token"]
       allow_methods     = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-      allow_origins     = ["*"] # RESTRICT IN PRODUCTION
+      allow_origins     = local.allowed_origins
       expose_headers    = ["date", "keep-alive"]
       max_age           = 86400
       allow_credentials = false
@@ -947,6 +917,7 @@ unit "api_gateway" {
       throttling_rate_limit    = 500
     }
 
+    access_log_destination_arn = "arn:aws:logs:${local.region}:${local.development_account_id}:log-group:/aws/apigateway/${local.project}-${local.env}-api"
     access_log_format = jsonencode({
       requestId        = "$context.requestId"
       ip               = "$context.identity.sourceIp"
@@ -964,6 +935,85 @@ unit "api_gateway" {
       Name        = "${local.project}-api"
       Environment = "development"
       Purpose     = "Application-API"
+    }
+  }
+}
+
+
+unit "kms_serverless" {
+  source = "../../../../../units/kms-serverless"
+  path   = "kms-serverless"
+
+  values = {
+    description = "KMS key for ${local.project} serverless application encryption"
+    account_id  = local.development_account_id
+    
+    aliases = ["${local.project}/${local.env}/serverless"]
+    
+    enable_key_rotation = true
+    
+    tags = {
+      Name        = "${local.project}-${local.env}-serverless-kms"
+      Environment = local.env
+      Purpose     = "Serverless-Encryption"
+    }
+  }
+}
+
+unit "lambda_dlq" {
+  source = "../../../../../units/sqs-dlq"
+  path   = "lambda-dlq"
+
+  values = {
+    name = "${local.project}-${local.env}-lambda-dlq"
+    
+    message_retention_seconds = 1209600  # 14 days
+    visibility_timeout_seconds = 300     # 5 minutes
+    
+    kms_master_key_id = "alias/${local.project}/${local.env}/serverless"
+    
+    create_queue_policy = true
+    queue_policy_statements = {
+      lambda_access = {
+        sid    = "AllowLambdaService"
+        effect = "Allow"
+        principals = [
+          {
+            type        = "Service"
+            identifiers = ["lambda.amazonaws.com"]
+          }
+        ]
+        actions = [
+          "sqs:SendMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        resources = ["*"]
+      }
+    }
+    
+    tags = {
+      Name        = "${local.project}-${local.env}-lambda-dlq"
+      Environment = local.env
+      Purpose     = "Lambda-Dead-Letter-Queue"
+    }
+  }
+}
+
+unit "api_gateway_logs" {
+  source = "../../../../../units/cloudwatch-log-group"
+  path   = "api-gateway-logs"
+
+  values = {
+    name = "/aws/apigateway/${local.project}-${local.env}-api"
+    
+    retention_in_days = 14
+    
+    kms_key_id = "alias/${local.project}/${local.env}/serverless"
+    
+    tags = {
+      Name        = "${local.project}-${local.env}-api-logs"
+      Environment = local.env
+      Purpose     = "API-Gateway-Logs"
     }
   }
 }
