@@ -318,21 +318,42 @@ unit "eks" {
     vpc_path = "../vpc"
     kms_path = "../kms"
 
-    cluster_name    = "${local.project}-auto-cluster"
+    cluster_name    = "${local.project}-cluster"
     cluster_version = "1.31"
 
     enable_auto_mode              = true
     bootstrap_self_managed_addons = true
+    
+    node_pools = ["general-purpose"]
+
+    cluster_addons = {
+      coredns = {
+        preserve    = true
+        most_recent = true
+      }
+      eks-pod-identity-agent = {
+        preserve    = true
+        most_recent = true
+      }
+      kube-proxy = {
+        preserve    = true
+        most_recent = true
+      }
+      vpc-cni = {
+        preserve    = true
+        most_recent = true
+      }
+    }
 
     cluster_endpoint_public_access       = true
     cluster_endpoint_private_access      = true
-    cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"] # RESTRICT IN PRODUCTION
+    cluster_endpoint_public_access_cidrs = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"] # Private networks only
 
     authentication_mode = "API_AND_CONFIG_MAP"
 
     access_entries = {
       admin = {
-        principal_arn     = "arn:aws:iam::${local.development_account_id}:role/eks-admin-role" # BOILERPLATE ADMIN ROLE INPUT
+        principal_arn     = "arn:aws:iam::${local.development_account_id}:role/terragrunt-execution-role"
         kubernetes_groups = ["system:masters"]
         policy_associations = {
           admin = {
@@ -350,76 +371,46 @@ unit "eks" {
     enable_kms_encryption = true
 
     cluster_enabled_log_types              = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
-    cloudwatch_log_group_retention_in_days = 14
+    cloudwatch_log_group_retention_in_days = 30
     create_cloudwatch_log_group            = true
 
-    node_pools = ["general-purpose", "system"]
-
-    cluster_security_group_additional_rules = {}
-    node_security_group_additional_rules    = {}
+    cluster_security_group_additional_rules = {
+      ingress_nodes_443 = {
+        description                = "Node groups to cluster API"
+        protocol                   = "tcp"
+        from_port                  = 443
+        to_port                    = 443
+        type                       = "ingress"
+        source_node_security_group = true
+      }
+    }
+    
+    node_security_group_additional_rules = {
+      ingress_self_all = {
+        description = "Node to node all ports/protocols"
+        protocol    = "-1"
+        from_port   = 0
+        to_port     = 0
+        type        = "ingress"
+        self        = true
+      }
+      
+      egress_all = {
+        description      = "Node all egress"
+        protocol         = "-1"
+        from_port        = 0
+        to_port          = 0
+        type             = "egress"
+        cidr_blocks      = ["0.0.0.0/0"]
+        ipv6_cidr_blocks = ["::/0"]
+      }
+    }
 
     tags = {
-      Name        = "${local.project}-auto-cluster"
+      Name        = "${local.project}-cluster"
       Environment = "development"
       ManagedBy   = "Terragrunt"
       EKSMode     = "Auto"
-    }
-  }
-}
-
-unit "ebs_csi_driver" {
-  source = "../../../../../units/ebs-csi-driver"
-  path   = "ebs-csi-driver"
-
-  values = {
-    eks_path = "../eks"
-    kms_path = "../kms"
-
-    role_name                  = "ebs-csi-driver-role"
-    namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
-
-    enable_kms_encryption = true
-
-    tags = {
-      Name        = "ebs-csi-driver-role"
-      Environment = "development"
-      Purpose     = "EBS-CSI-Driver"
-    }
-  }
-}
-
-unit "aws_load_balancer_controller" {
-  source = "../../../../../units/aws-lbc"
-  path   = "aws-load-balancer-controller"
-
-  values = {
-    eks_path = "../eks"
-
-    helm_chart_name         = "aws-load-balancer-controller"
-    helm_chart_release_name = "aws-load-balancer-controller"
-    helm_chart_repo         = "https://aws.github.io/eks-charts"
-    helm_chart_version      = "1.8.4"
-
-    namespace            = "kube-system"
-    service_account_name = "aws-load-balancer-controller"
-
-    irsa_role_name_prefix = "aws-load-balancer-controller"
-
-    helm_chart_values = [
-      <<-EOT
-      clusterName: ${local.project}-auto-cluster
-      serviceAccount:
-        create: true
-        name: aws-load-balancer-controller
-      region: us-east-1
-      vpcId: vpc-placeholder  # Will be populated by the module
-      EOT
-    ]
-
-    tags = {
-      Name        = "aws-load-balancer-controller"
-      Environment = "development"
-      Purpose     = "Load-Balancer-Controller"
     }
   }
 }
@@ -446,7 +437,6 @@ unit "additional_iam_roles" {
     }
   }
 }
-{{ end }}
 {{ if eq .InfrastructurePreset "eks-managed" }}
 unit "kms" {
   source = "../../../../../units/kms"
