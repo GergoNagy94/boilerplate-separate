@@ -642,6 +642,44 @@ unit "secrets_manager" {
   }
 }
 
+unit "rds_security_group" {
+  source = "../../../../../units/security-group"
+  path   = "rds-security-group"
+
+  values = {
+    vpc_path = "../vpc"
+    
+    name        = "${local.project}-${local.env}-rds-sg"
+    description = "Security group for RDS database"
+    
+    ingress_with_cidr_blocks = [
+      {
+        from_port   = 3306
+        to_port     = 3306
+        protocol    = "tcp"
+        cidr_blocks = "10.0.0.0/16"
+        description = "MySQL access from VPC"
+      }
+    ]
+    
+    egress_with_cidr_blocks = [
+      {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = "0.0.0.0/0"
+        description = "All outbound traffic"
+      }
+    ]
+    
+    tags = {
+      Name        = "${local.project}-${local.env}-rds-sg"
+      Environment = "development"
+      Purpose     = "RDS-Database-Access"
+    }
+  }
+}
+
 unit "rds" {
   source = "../../../../../units/rds-lambda"
   path   = "rds"
@@ -649,6 +687,7 @@ unit "rds" {
   values = {
     vpc_path             = "../vpc"
     secrets_manager_path = "../secrets-manager"
+    security_group_path  = "../rds-security-group"
 
     identifier = "${local.project}-${local.env}-db"
 
@@ -705,6 +744,57 @@ unit "rds" {
   }
 }
 
+unit "lambda_security_group" {
+  source = "../../../../../units/security-group"
+  path   = "lambda-security-group"
+
+  values = {
+    vpc_path = "../vpc"
+    
+    name        = "${local.project}-${local.env}-lambda-sg"
+    description = "Security group for Lambda function"
+    
+    ingress_with_cidr_blocks = []
+    
+    egress_with_cidr_blocks = [
+      {
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_blocks = "0.0.0.0/0"
+        description = "HTTPS to internet"
+      },
+      {
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_blocks = "0.0.0.0/0"
+        description = "HTTP to internet"
+      },
+      {
+        from_port   = 3306
+        to_port     = 3306
+        protocol    = "tcp"
+        cidr_blocks = "10.0.0.0/16"
+        description = "MySQL to RDS"
+      },
+      {
+        from_port   = 53
+        to_port     = 53
+        protocol    = "udp"
+        cidr_blocks = "0.0.0.0/0"
+        description = "DNS"
+      }
+    ]
+    
+    tags = {
+      Name        = "${local.project}-${local.env}-lambda-sg"
+      Environment = "development"
+      Purpose     = "Lambda-Function-Access"
+    }
+  }
+}
+
 unit "lambda" {
   source = "../../../../../units/lambda"
   path   = "lambda"
@@ -713,6 +803,7 @@ unit "lambda" {
     vpc_path             = "../vpc"
     rds_path             = "../rds"
     secrets_manager_path = "../secrets-manager"
+    security_group_path  = "../lambda-security-group"
 
     function_name = "${local.project}-app"
     description   = "Main serverless application function"
@@ -721,12 +812,15 @@ unit "lambda" {
     timeout       = 30
     memory_size   = 512
 
-    source_path    = "./src" # PATH TO LAMBDA SOURCE CODE
-    create_package = true
+    # Option 1: Local zip file
+    local_existing_package = "${get_parent_terragrunt_dir()}/../../src/lambda_function.zip"
+    create_package = false
 
-    # Option 2: S3 source code
-    # s3_bucket = "my-lambda-deployments"
-    # s3_key    = "${local.project}-${local.env}/lambda.zip"
+    # Option 2: S3 source code (uncomment to use)
+    # s3_existing_package = {
+    #   bucket = "my-lambda-deployments"
+    #   key    = "${local.project}-${local.env}/lambda.zip"
+    # }
 
     environment_variables = {
       LOG_LEVEL          = "INFO"
