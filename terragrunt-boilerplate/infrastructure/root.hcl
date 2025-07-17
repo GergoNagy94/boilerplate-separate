@@ -19,6 +19,7 @@ locals {
   s3_state_region = "{{.StateRegion}}"
 }
 
+/*
 remote_state {
   backend = "s3"
   generate = {
@@ -33,6 +34,7 @@ remote_state {
     dynamodb_table = "${local.project}-${local.env}-terraform-state-lock"
   }
 }
+*/
 
 generate "provider" {
   path      = "provider.tf"
