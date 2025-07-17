@@ -13,6 +13,7 @@ locals {
     primary = "example.com"
     www     = "www.example.com"
   }
+  {{ end }}
   {{ if eq .InfrastructurePreset "serverless" }}
   allow_origins = ["https://exakmpledomain.com", "https://app.exakmpledomain.com"]
   {{ end }}
