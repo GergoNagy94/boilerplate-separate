@@ -265,7 +265,6 @@ unit "route53_records" {
     cloudfront_path    = "../cloudfront"
     route53_zones_path = "../route53-zones"
     
-    # Specify the domain to get zone ID for
     primary_domain = ${local.domains.primary}
 
     domain_names = ["${local.domains.primary}", "${local.domains.www}"]
@@ -347,7 +346,7 @@ unit "eks" {
 
     cluster_endpoint_public_access       = true
     cluster_endpoint_private_access      = true
-    cluster_endpoint_public_access_cidrs = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"] # Private networks only
+    cluster_endpoint_public_access_cidrs = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 
     authentication_mode = "API_AND_CONFIG_MAP"
 
@@ -508,7 +507,6 @@ unit "eks" {
           max_unavailable_percentage = 25
         }
 
-        # Security enhancements
         metadata_options = {
           http_endpoint               = "enabled"
           http_tokens                 = "required"
@@ -532,7 +530,7 @@ unit "eks" {
 
     cluster_endpoint_public_access       = true
     cluster_endpoint_private_access      = true
-    cluster_endpoint_public_access_cidrs = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"] # Private networks only
+    cluster_endpoint_public_access_cidrs = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 
     authentication_mode = "API_AND_CONFIG_MAP"
 
@@ -769,7 +767,7 @@ unit "rds" {
     engine_version       = "8.0.39"
     major_engine_version = "8.0"
     family               = "mysql8.0"
-    instance_class       = "db.t3.micro" # INCREASE FOR PRODUCTION
+    instance_class       = "db.t3.micro"
 
     allocated_storage     = 20
     max_allocated_storage = 100
