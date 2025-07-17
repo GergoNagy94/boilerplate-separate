@@ -146,13 +146,6 @@ variables:
       - required
       - semver
 
-skip_files:
-  - path: "infrastructure/live/development/{{.DevelopmentRegion}}/{{.InfrastructurePreset}}/db/**/*"
-    if: '{{ ne .InfrastructurePreset "serverless" }}'
-
-  - path: "infrastructure/live/development/{{.DevelopmentRegion}}/{{.InfrastructurePreset}}/src/**/*"
-    if: '{{ ne .InfrastructurePreset "serverless" }}'
-
 hooks:
   before:
     - command: "bash"
@@ -164,7 +157,7 @@ hooks:
           COLOR_RESET="\033[0m"         
 
           echo -e "${COLOR_GREEN} Code Factory Terragrunt Stack Boilerplate${COLOR_RESET}"
-          echo -e "${COLOR_GREEN} Starting Terragrunt Stack generation for ${COLOR_HIGHLIGHT}{{.ProjectName}}${COLOR_SUCCESS}...${COLOR_RESET}"
+          echo -e "${COLOR_GREEN} Starting Terragrunt Stack generation for ${COLOR_HIGHLIGHT}{{.InfrastructurePreset}}${COLOR_RESET}...${COLOR_RESET}"
 
   after:
     - command: "bash"
