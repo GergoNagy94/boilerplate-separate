@@ -84,10 +84,10 @@ unit "route53_zones" {
 
   values = {
     zones = {
-      ${local.domains.primary} = {
+      "${local.domains.primary}" = {
         comment = "Hosted zone for ${local.domains.primary}"
         tags = {
-          Name = ${local.domains.primary}
+          Name = local.domains.primary
         }
       }
     }
@@ -104,8 +104,8 @@ unit "acm" {
 
   values = {
     route53_path              = "../route53-zones"
-    domain_name               = ${local.domains.primary}
-    subject_alternative_names = [${local.domains.www}]
+    domain_name               = local.domains.primary
+    subject_alternative_names = [local.domains.www]
     wait_for_validation       = true
 
     tags = {
@@ -268,14 +268,14 @@ unit "route53_records" {
     cloudfront_path    = "../cloudfront"
     route53_zones_path = "../route53-zones"
     
-    primary_domain = ${local.domains.primary}
+    primary_domain = local.domains.primary
 
     domain_names = ["${local.domains.primary}", "${local.domains.www}"]
     enable_ipv6  = true
 
     additional_records = [
       {
-        name    = ${local.domains.primary}
+        name    = local.domains.primary
         type    = "MX"
         ttl     = 300
         records = ["10 mail.${local.domains.primary}"]
