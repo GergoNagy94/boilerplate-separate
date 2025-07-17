@@ -28,7 +28,7 @@ inputs = {
   ignore_secret_changes   = try(values.ignore_secret_changes, false)
 
   create_policy     = try(values.create_policy, false)
-  policy_statements = try(values.create_policy, false) ? try(values.policy_statements, []) : []
+  policy_statements = try(values.policy_statements, {})
 
   block_public_policy = try(values.block_public_policy, true)
 

@@ -32,6 +32,13 @@ dependency "secrets_manager" {
   }
 }
 
+dependency "security_group" {
+  config_path = values.security_group_path
+  mock_outputs = {
+    security_group_id = "sg-00000000"
+  }
+}
+
 inputs = {
   function_name = values.function_name
   description   = try(values.description, "Serverless application function")
@@ -40,14 +47,13 @@ inputs = {
   timeout       = try(values.timeout, 30)
   memory_size   = try(values.memory_size, 256)
 
-  source_path = try(values.source_path, null)
-  s3_bucket   = try(values.s3_bucket, null)
-  s3_key      = try(values.s3_key, null)
+  local_existing_package = try(values.local_existing_package, null)
+  s3_existing_package = try(values.s3_existing_package, null)
   
-  create_package = try(values.create_package, values.source_path != null)
+  create_package = try(values.create_package, false)
   
   vpc_subnet_ids         = dependency.vpc.outputs.private_subnets
-  vpc_security_group_ids = [aws_security_group.lambda.id]
+  vpc_security_group_ids = [dependency.security_group.outputs.security_group_id]
   
   environment_variables = merge(
     try(values.environment_variables, {}),
@@ -70,33 +76,7 @@ inputs = {
   
   provisioned_concurrency_config = try(values.provisioned_concurrency_config, {})
   
-  attach_policy_statements = true
-  policy_statements = {
-    secrets_manager = {
-      effect = "Allow"
-      actions = [
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:DescribeSecret"
-      ]
-      resources = [dependency.secrets_manager.outputs.secret_arn]
-    }
-    rds_connect = {
-      effect = "Allow"
-      actions = [
-        "rds-db:connect"
-      ]
-      resources = ["*"]
-    }
-    cloudwatch_logs = {
-      effect = "Allow"
-      actions = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ]
-      resources = ["arn:aws:logs:*:*:*"]
-    }
-  }
+  attach_policy_statements = false
 
   cloudwatch_logs_retention_in_days = try(values.cloudwatch_logs_retention_in_days, 14)
   
@@ -105,47 +85,3 @@ inputs = {
   tags = try(values.tags, {})
 }
 
-resource "aws_security_group" "lambda" {
-  name_prefix = "${values.function_name}-lambda-"
-  vpc_id      = dependency.vpc.outputs.vpc_id
-  description = "Security group for Lambda function"
-
-  egress {
-    description = "HTTPS to internet"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "HTTP to internet"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "MySQL to RDS"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = [dependency.vpc.outputs.vpc_cidr_block]
-  }
-
-  egress {
-    description = "DNS"
-    from_port   = 53
-    to_port     = 53
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(
-    try(values.tags, {}),
-    {
-      Name = "${values.function_name}-lambda-sg"
-    }
-  )
-}
