@@ -89,7 +89,7 @@ variables:
       - required
       - email
 
-  - name: MonitoringEmail
+  - name: ProductionEmail
     description: "(valid email format)"
     order: 12
     type: string
