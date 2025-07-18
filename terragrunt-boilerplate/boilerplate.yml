@@ -22,11 +22,19 @@ variables:
     type: string
     validations:
       - required
-      - length-12-34
+      - length-10-32
+  
+  - name: OrganizationRootId
+    description: "(format: o-xxxx)"
+    order: 4
+    type: string
+    validations:
+      - required
+      - length-6-36
 
   - name: DevelopmentAccountId
     description: "(exactly 12 digits)"
-    order: 4
+    order: 5
     type: string
     validations:
       - required
@@ -35,7 +43,7 @@ variables:
 
   - name: ManagementAccountId
     description: "(exactly 12 digits)"
-    order: 5
+    order: 6
     type: string
     validate:
       - required
@@ -43,7 +51,7 @@ variables:
 
   - name: MonitoringAccountId
     description: "(exactly 12 digits)"
-    order: 6
+    order: 7
     type: string
     validate:
       - required
@@ -51,7 +59,7 @@ variables:
 
   - name: ProductionAccountId
     description: "(exactly 12 digits)"
-    order: 7
+    order: 8
     type: string
     validate:
       - required
@@ -59,21 +67,13 @@ variables:
 
   - name: DevelopmentEmail
     description: "(valid email format)"
-    order: 8
-    type: string
-    validations:
-      - required
-      - email
-
-  - name: ManagementEmail
-    description: "(valid email format)"
     order: 9
     type: string
     validations:
       - required
       - email
 
-  - name: MonitoringEmail
+  - name: ManagementEmail
     description: "(valid email format)"
     order: 10
     type: string
@@ -89,37 +89,15 @@ variables:
       - required
       - email
 
-  - name: DevelopmentRegion
+  - name: MonitoringEmail
+    description: "(valid email format)"
     order: 12
-    type: enum
-    default: "eu-west-1"
-    options:
-      - "us-east-1"
-      - "us-east-2"
-      - "us-west-1"
-      - "us-west-2"
-      - "eu-west-1"
-      - "eu-west-2"
-      - "eu-west-3"
-      - "eu-central-1"
-      - "eu-central-2"
-      - "eu-north-1"
-      - "eu-south-1"
-      - "eu-south-2"
-      - "ap-northeast-1"
-      - "ap-northeast-2"
-      - "ap-northeast-3"
-      - "ap-southeast-1"
-      - "ap-southeast-2"
-      - "ap-southeast-3"
-      - "ap-south-1"
-      - "ap-south-2"
-      - "ca-central-1"
-      - "sa-east-1"
-    validate:
+    type: string
+    validations:
       - required
+      - email
 
-  - name: ManagementRegion
+  - name: DevelopmentRegion
     order: 13
     type: enum
     default: "eu-west-1"
@@ -149,7 +127,7 @@ variables:
     validate:
       - required
 
-  - name: MonitoringRegion
+  - name: ManagementRegion
     order: 14
     type: enum
     default: "eu-west-1"
@@ -179,8 +157,38 @@ variables:
     validate:
       - required
 
-  - name: ProductionRegion
+  - name: MonitoringRegion
     order: 15
+    type: enum
+    default: "eu-west-1"
+    options:
+      - "us-east-1"
+      - "us-east-2"
+      - "us-west-1"
+      - "us-west-2"
+      - "eu-west-1"
+      - "eu-west-2"
+      - "eu-west-3"
+      - "eu-central-1"
+      - "eu-central-2"
+      - "eu-north-1"
+      - "eu-south-1"
+      - "eu-south-2"
+      - "ap-northeast-1"
+      - "ap-northeast-2"
+      - "ap-northeast-3"
+      - "ap-southeast-1"
+      - "ap-southeast-2"
+      - "ap-southeast-3"
+      - "ap-south-1"
+      - "ap-south-2"
+      - "ca-central-1"
+      - "sa-east-1"
+    validate:
+      - required
+
+  - name: ProductionRegion
+    order: 16
     type: enum
     default: "eu-west-1"
     options:
@@ -211,7 +219,7 @@ variables:
 
   - name: StateRegion
     description: "Region for Terraform state bucket"
-    order: 16
+    order: 17
     type: enum
     default: "eu-central-1"
     options:
@@ -248,7 +256,7 @@ variables:
       • serverless     (vpc, rds, lambda, secrets manager)
       • eks-auto       (vpc, eks-automod)
       • eks-managed    (vpc, eks-managed-nodegroup)
-    order: 17
+    order: 18
     type: enum
     options:
       - foundation
@@ -262,7 +270,7 @@ variables:
 
   - name: OpentofuVersion
     description: "OpenTofu version"
-    order: 18
+    order: 19
     type: string
     default: "1.10.2"
     validate:
@@ -271,7 +279,7 @@ variables:
 
   - name: TerragruntVersion
     description: "Terragrunt version"
-    order: 19
+    order: 20
     type: string
     default: "0.82.3"
     validate:
