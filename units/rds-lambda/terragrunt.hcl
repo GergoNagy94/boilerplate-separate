@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-rds?ref=v6.10.0"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-rds?ref=v6.12.0"
 }
 
 dependency "vpc" {
@@ -16,11 +16,12 @@ dependency "vpc" {
   }
 }
 
-dependency "secrets_manager" {
-  config_path = values.secrets_manager_path
+# Secrets Manager dependency removed - RDS manages secrets automatically
+
+dependency "security_group" {
+  config_path = values.security_group_path
   mock_outputs = {
-    secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:db-credentials-AbCdEf"
-    secret_id  = "db-credentials"
+    security_group_id = "sg-00000000"
   }
 }
 
@@ -43,7 +44,7 @@ inputs = {
   manage_master_user_password   = try(values.manage_master_user_password, true)
   master_user_secret_kms_key_id = try(values.master_user_secret_kms_key_id, null)
 
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  vpc_security_group_ids = [dependency.security_group.outputs.security_group_id]
   db_subnet_group_name   = dependency.vpc.outputs.database_subnet_group_name
 
   family                    = try(values.family, "mysql8.0")
@@ -77,31 +78,3 @@ inputs = {
   tags = try(values.tags, {})
 }
 
-resource "aws_security_group" "rds" {
-  name_prefix = "${values.identifier}-rds-"
-  vpc_id      = dependency.vpc.outputs.vpc_id
-  description = "Security group for RDS database"
-
-  ingress {
-    description = "MySQL/Aurora access from Lambda"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = [dependency.vpc.outputs.vpc_cidr_block]
-  }
-
-  egress {
-    description = "All outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(
-    try(values.tags, {}),
-    {
-      Name = "${values.identifier}-rds-sg"
-    }
-  )
-}

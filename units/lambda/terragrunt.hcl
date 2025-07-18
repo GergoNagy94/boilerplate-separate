@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-lambda?ref=v7.13.0"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-lambda?ref=v8.0.1"
 }
 
 dependency "vpc" {
@@ -21,14 +21,30 @@ dependency "rds" {
     db_instance_endpoint = "mock-db.cluster-xyz.us-east-1.rds.amazonaws.com"
     db_instance_port     = 3306
     db_instance_name     = "appdb"
+    db_master_user_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:mock-secret-AbCdEf"
+    db_instance_identifier = "mock-db-instance"
   }
 }
 
-dependency "secrets_manager" {
-  config_path = values.secrets_manager_path
+dependency "security_group" {
+  config_path = values.security_group_path
   mock_outputs = {
-    secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:db-credentials-AbCdEf"
-    secret_id  = "db-credentials"
+    security_group_id = "sg-00000000"
+  }
+}
+
+dependency "dlq" {
+  config_path = values.dlq_path
+  mock_outputs = {
+    queue_arn = "arn:aws:sqs:us-east-1:123456789012:mock-dlq"
+  }
+}
+
+dependency "kms" {
+  config_path = values.kms_path
+  mock_outputs = {
+    key_arn = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+    key_id  = "12345678-1234-1234-1234-123456789012"
   }
 }
 
@@ -40,14 +56,13 @@ inputs = {
   timeout       = try(values.timeout, 30)
   memory_size   = try(values.memory_size, 256)
 
-  source_path = try(values.source_path, null)
-  s3_bucket   = try(values.s3_bucket, null)
-  s3_key      = try(values.s3_key, null)
+  local_existing_package = try(values.local_existing_package, null)
+  s3_existing_package = try(values.s3_existing_package, null)
   
-  create_package = try(values.create_package, values.source_path != null)
+  create_package = try(values.create_package, false)
   
   vpc_subnet_ids         = dependency.vpc.outputs.private_subnets
-  vpc_security_group_ids = [aws_security_group.lambda.id]
+  vpc_security_group_ids = [dependency.security_group.outputs.security_group_id]
   
   environment_variables = merge(
     try(values.environment_variables, {}),
@@ -55,14 +70,14 @@ inputs = {
       DB_HOST        = dependency.rds.outputs.db_instance_endpoint
       DB_PORT        = tostring(dependency.rds.outputs.db_instance_port)
       DB_NAME        = dependency.rds.outputs.db_instance_name
-      SECRET_ARN     = dependency.secrets_manager.outputs.secret_arn
+      DB_SECRET_ARN  = dependency.rds.outputs.db_master_user_secret_arn
       AWS_REGION     = try(values.aws_region, "us-east-1")
     }
   )
 
   attach_network_policy = true
   
-  dead_letter_target_arn = try(values.dead_letter_target_arn, null)
+  dead_letter_target_arn = dependency.dlq.outputs.queue_arn
   
   reserved_concurrent_executions = try(values.reserved_concurrent_executions, -1)
   
@@ -70,31 +85,49 @@ inputs = {
   
   provisioned_concurrency_config = try(values.provisioned_concurrency_config, {})
   
+  # Use KMS key for environment variables encryption
+  kms_key_arn = dependency.kms.outputs.key_arn
+  
   attach_policy_statements = true
   policy_statements = {
-    secrets_manager = {
-      effect = "Allow"
+    secrets_manager_read = {
+      effect = "Allow",
       actions = [
         "secretsmanager:GetSecretValue",
         "secretsmanager:DescribeSecret"
+      ],
+      resources = [
+        dependency.rds.outputs.db_master_user_secret_arn
       ]
-      resources = [dependency.secrets_manager.outputs.secret_arn]
     }
     rds_connect = {
-      effect = "Allow"
+      effect = "Allow",
       actions = [
         "rds-db:connect"
+      ],
+      resources = [
+        "arn:aws:rds-db:*:*:dbuser:${dependency.rds.outputs.db_instance_identifier}/*"
       ]
-      resources = ["*"]
     }
-    cloudwatch_logs = {
-      effect = "Allow"
+    kms_access = {
+      effect = "Allow",
       actions = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+      ],
+      resources = [
+        dependency.kms.outputs.key_arn
       ]
-      resources = ["arn:aws:logs:*:*:*"]
+    }
+    dlq_access = {
+      effect = "Allow",
+      actions = [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      resources = [
+        dependency.dlq.outputs.queue_arn
+      ]
     }
   }
 
@@ -105,47 +138,3 @@ inputs = {
   tags = try(values.tags, {})
 }
 
-resource "aws_security_group" "lambda" {
-  name_prefix = "${values.function_name}-lambda-"
-  vpc_id      = dependency.vpc.outputs.vpc_id
-  description = "Security group for Lambda function"
-
-  egress {
-    description = "HTTPS to internet"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "HTTP to internet"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "MySQL to RDS"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = [dependency.vpc.outputs.vpc_cidr_block]
-  }
-
-  egress {
-    description = "DNS"
-    from_port   = 53
-    to_port     = 53
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(
-    try(values.tags, {}),
-    {
-      Name = "${values.function_name}-lambda-sg"
-    }
-  )
-}

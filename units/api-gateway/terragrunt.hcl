@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::git@github.com:terraform-aws-modules/terraform-aws-apigateway-v2?ref=v5.2.0"
+  source = "git::git@github.com:terraform-aws-modules/terraform-aws-apigateway-v2?ref=v5.3.0"
 }
 
 dependency "lambda" {
@@ -29,7 +29,7 @@ inputs = {
     allow_credentials = false
   })
 
-  domain_name                 = try(values.domain_name, null)
+  domain_name                 = try(values.domain_name, "")
   domain_name_certificate_arn = try(values.domain_name_certificate_arn, null)
 
   default_stage_access_log_destination_arn = try(values.access_log_destination_arn, null)
@@ -52,39 +52,44 @@ inputs = {
 
   integrations = {
     "POST /" = {
-      lambda_arn             = dependency.lambda.outputs.lambda_function_arn
-      payload_format_version = "2.0"
-      timeout_milliseconds   = 12000
+      lambda_arn               = dependency.lambda.outputs.lambda_function_arn
+      payload_format_version   = "2.0"
+      timeout_milliseconds     = 12000
+      integration_type         = "AWS_PROXY"
+      integration_method       = "POST"
+      create_lambda_permission = true
     }
 
     "GET /" = {
-      lambda_arn             = dependency.lambda.outputs.lambda_function_arn
-      payload_format_version = "2.0"
-      timeout_milliseconds   = 12000
+      lambda_arn               = dependency.lambda.outputs.lambda_function_arn
+      payload_format_version   = "2.0"
+      timeout_milliseconds     = 12000
+      integration_type         = "AWS_PROXY"
+      integration_method       = "POST"
+      create_lambda_permission = true
     }
 
     "GET /health" = {
-      lambda_arn             = dependency.lambda.outputs.lambda_function_arn
-      payload_format_version = "2.0"
-      timeout_milliseconds   = 12000
+      lambda_arn               = dependency.lambda.outputs.lambda_function_arn
+      payload_format_version   = "2.0"
+      timeout_milliseconds     = 12000
+      integration_type         = "AWS_PROXY"
+      integration_method       = "POST"
+      create_lambda_permission = true
     }
 
     "$default" = {
-      lambda_arn             = dependency.lambda.outputs.lambda_function_arn
-      payload_format_version = "2.0"
-      timeout_milliseconds   = 12000
+      lambda_arn               = dependency.lambda.outputs.lambda_function_arn
+      payload_format_version   = "2.0"
+      timeout_milliseconds     = 12000
+      integration_type         = "AWS_PROXY"
+      integration_method       = "POST"
+      create_lambda_permission = true
     }
   }
 
-  create_api_domain_name = try(values.create_api_domain_name, false)
+  create_domain_name = try(values.create_domain_name, false)
   
   tags = try(values.tags, {})
 }
 
-resource "aws_lambda_permission" "api_gateway" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = dependency.lambda.outputs.lambda_function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*"
-}
