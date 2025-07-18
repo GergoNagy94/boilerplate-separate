@@ -1,25 +1,18 @@
-# Boilerplate Templating Project For Terragrunt by Code Factory
+# Boilerplate Templates for Terragrunt
 
-This project provides reusable Terragrunt templates that help you quickly set up infrastructure across different environments.
+Creates AWS infrastructure templates using Terragrunt.
 
 ## What is Boilerplate?
 
-[Boilerplate](https://github.com/gruntwork-io/boilerplate) is a tool that generates files and folders from templates, allowing you to create consistent project structures with customizable variables.
+A tool that creates files from templates. [See docs](https://github.com/gruntwork-io/boilerplate).
 
-## How to use this repo:
+## How to use
 
-### Prerequisites
-- Install [Boilerplate](https://github.com/gruntwork-io/boilerplate#install)
-- Install [Terragrunt](https://terragrunt.gruntwork.io/docs/getting-started/install/)
+1. Install [Boilerplate](https://github.com/gruntwork-io/boilerplate#install)
 
-### Steps to generate your project
+2. Run this command (no need to clone this repo - use the URL directly):
+```bash
+boilerplate --template-url "github.com/codefactoryhu/boilerplate-aws//terragrunt-boilerplate?ref=main" --output-folder ~/Desktop/single-acc/
+```
 
-1. **Generate your project**: Run the following command to create a new project from these templates:
-   ```bash
-   boilerplate --template-url "github.com/codefactoryhu/boilerplate-aws//terragrunt-boilerplate?ref=main" \
-   --output-folder ~/Desktop/single-acc/
-   ```
-
-2. **Customize as needed**: Edit the generated files to match your specific infrastructure requirements
-
----
+3. Edit the generated files for your project
