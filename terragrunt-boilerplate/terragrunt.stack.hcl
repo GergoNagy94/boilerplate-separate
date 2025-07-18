@@ -683,3 +683,162 @@ unit "additional_iam_roles" {
   }
 }
 {{- end }}
+
+{{- if has "cloudwatch-log-group" .Units }}
+unit "cloudwatch_log_group" {
+  source = "../../units/cloudwatch-log-group"
+  path   = "cloudwatch-log-group"
+
+  values = {
+    log_groups = {
+      application = {
+        name              = "/aws/lambda/${local.project}-${local.env}"
+        retention_in_days = 14
+        tags = {
+          Application = local.project
+          Environment = local.env
+        }
+      }
+      {{- if has "api-gateway" .Units }}
+      api_gateway = {
+        name              = "/aws/apigateway/${local.project}-${local.env}"
+        retention_in_days = 14
+        tags = {
+          Application = local.project
+          Environment = local.env
+        }
+      }
+      {{- end }}
+    }
+
+    tags = merge(local.tags, {
+      Name    = "${local.project}-log-groups"
+      Purpose = "Centralized-Logging"
+    })
+  }
+}
+{{- end }}
+
+{{- if has "kms-serverless" .Units }}
+unit "kms_serverless" {
+  source = "../../units/kms-serverless"
+  path   = "kms-serverless"
+
+  values = {
+    description = "KMS key for serverless applications"
+    aliases     = ["alias/${local.project}-serverless"]
+
+    key_administrators = [
+      "arn:aws:iam::123456789012:root",
+      "arn:aws:iam::123456789012:role/terragrunt-execution-role"
+    ]
+
+    deletion_window_in_days = 7
+
+    tags = merge(local.tags, {
+      Name    = "${local.project}-serverless-kms"
+      Purpose = "Serverless-Encryption"
+    })
+  }
+}
+{{- end }}
+
+{{- if has "security-group" .Units }}
+unit "security_group" {
+  source = "../../units/security-group"
+  path   = "security-group"
+
+  values = {
+    {{- if has "vpc" .Units }}
+    vpc_path = "../vpc"
+    {{- end }}
+
+    security_groups = {
+      web = {
+        name        = "${local.project}-web-sg"
+        description = "Security group for web servers"
+        ingress_rules = [
+          {
+            from_port   = 80
+            to_port     = 80
+            protocol    = "tcp"
+            cidr_blocks = ["0.0.0.0/0"]
+            description = "HTTP"
+          },
+          {
+            from_port   = 443
+            to_port     = 443
+            protocol    = "tcp"
+            cidr_blocks = ["0.0.0.0/0"]
+            description = "HTTPS"
+          }
+        ]
+        egress_rules = [
+          {
+            from_port   = 0
+            to_port     = 0
+            protocol    = "-1"
+            cidr_blocks = ["0.0.0.0/0"]
+            description = "All outbound"
+          }
+        ]
+      }
+      {{- if has "rds-lambda" .Units }}
+      database = {
+        name        = "${local.project}-db-sg"
+        description = "Security group for database"
+        ingress_rules = [
+          {
+            from_port                = 3306
+            to_port                  = 3306
+            protocol                 = "tcp"
+            source_security_group_id = "sg-lambda"
+            description              = "MySQL from Lambda"
+          }
+        ]
+        egress_rules = []
+      }
+      {{- end }}
+    }
+
+    tags = merge(local.tags, {
+      Name    = "${local.project}-security-groups"
+      Purpose = "Network-Security"
+    })
+  }
+}
+{{- end }}
+
+{{- if has "sqs-dlq" .Units }}
+unit "sqs_dlq" {
+  source = "../../units/sqs-dlq"
+  path   = "sqs-dlq"
+
+  values = {
+    {{- if has "kms-serverless" .Units }}
+    kms_path = "../kms-serverless"
+    {{- end }}
+
+    queue_name = "${local.project}-${local.env}-queue"
+    
+    visibility_timeout_seconds = 30
+    message_retention_seconds  = 1209600  # 14 days
+    max_message_size          = 262144   # 256 KB
+    delay_seconds             = 0
+    receive_wait_time_seconds = 0
+
+    dlq_name                    = "${local.project}-${local.env}-dlq"
+    dlq_message_retention_seconds = 1209600  # 14 days
+    max_receive_count           = 3
+
+    {{- if has "kms-serverless" .Units }}
+    enable_encryption = true
+    {{- end }}
+
+    tags = merge(local.tags, {
+      Name    = "${local.project}-sqs-queue"
+      Purpose = "Message-Queue"
+    })
+  }
+}
+{{- end }}
