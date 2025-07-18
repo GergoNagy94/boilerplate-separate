@@ -24,7 +24,14 @@ inputs = {
     enabled = false
   })
 
-  server_side_encryption_configuration = try(values.server_side_encryption_configuration, {})
+  server_side_encryption_configuration = try(values.server_side_encryption_configuration, {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
+      bucket_key_enabled = true
+    }
+  })
   lifecycle_rule                       = try(values.lifecycle_rule, [])
   tags                                 = try(values.tags, {})
 }

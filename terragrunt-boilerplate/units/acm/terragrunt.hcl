@@ -10,7 +10,7 @@ dependency "route53" {
   config_path = values.route53_path
   mock_outputs = {
     route53_zone_zone_id = {
-      "example.com" = "Z1234567890ABC"
+      "yourdomain.com" = "Z1234567890ABC"
     }
   }
 }

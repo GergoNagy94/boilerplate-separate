@@ -41,8 +41,8 @@ inputs = {
 
   origin = {
     s3_bucket = {
-      domain_name = dependency.s3.outputs.s3_bucket_bucket_domain_name
-      s3_origin_config = {}
+      domain_name            = dependency.s3.outputs.s3_bucket_bucket_domain_name
+      origin_access_control = "s3_bucket"
     }
   }
 
@@ -66,8 +66,15 @@ inputs = {
 
   custom_error_response = try(values.custom_error_response, [])
 
-  create_origin_access_identity = false
-  origin_access_identities = {}
+  create_origin_access_control = true
+  origin_access_control = {
+    s3_bucket = {
+      description      = "S3 bucket OAC for ${dependency.s3.outputs.s3_bucket_id}"
+      origin_type      = "s3"
+      signing_behavior = "always"
+      signing_protocol = "sigv4"
+    }
+  }
 
   viewer_certificate = try(values.use_custom_certificate, false) ? {
     acm_certificate_arn = dependency.acm.outputs.acm_certificate_arn

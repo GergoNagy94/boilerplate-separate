@@ -19,7 +19,7 @@ dependency "route53_zones" {
   skip_outputs = try(values.route53_zones_path, null) == null ? true : false
   mock_outputs = {
     route53_zone_zone_id = {
-      "example.com" = "Z123456789"
+      "yourdomain.com" = "Z123456789"
     }
   }
 }
