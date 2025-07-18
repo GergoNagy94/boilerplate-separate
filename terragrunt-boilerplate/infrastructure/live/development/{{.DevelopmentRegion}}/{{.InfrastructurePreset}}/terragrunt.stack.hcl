@@ -165,31 +165,51 @@ unit "s3" {
   path   = "s3"
 
   values = {
-    bucket_name = "${local.project}-static-site-12345"
+    bucket_name = "${local.project}-static-site-codefactory"
 
     website = {
       index_document = "index.html"
       error_document = "error.html"
     }
 
-    block_public_acls       = false
-    block_public_policy     = false
-    ignore_public_acls      = false
-    restrict_public_buckets = false
+    block_public_acls       = true
+    block_public_policy     = true
+    ignore_public_acls      = true
+    restrict_public_buckets = true
 
     attach_policy = true
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
         {
-          Sid       = "PublicReadGetObject"
+          Sid       = "AllowCloudFrontServicePrincipal"
           Effect    = "Allow"
-          Principal = "*"
-          Action    = "s3:GetObject"
-          Resource  = "arn:aws:s3:::${local.project}-static-site-12345/*"
+          Principal = {
+            Service = "cloudfront.amazonaws.com"
+          }
+          Action   = "s3:GetObject"
+          Resource = "arn:aws:s3:::${local.project}-static-site-codefactory/*"
+          Condition = {
+            StringEquals = {
+              "AWS:SourceArn" = "arn:aws:cloudfront::${local.development_account_id}:distribution/*"
+            }
+          }
         }
       ]
     })
+
+    versioning = {
+      enabled = true
+    }
+
+    server_side_encryption_configuration = {
+      rule = {
+        apply_server_side_encryption_by_default = {
+          sse_algorithm = "AES256"
+        }
+        bucket_key_enabled = true
+      }
+    }
 
     cors_rule = [
       {
